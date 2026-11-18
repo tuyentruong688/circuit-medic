@@ -1,4 +1,6 @@
 import type { DeviceCategory, FaultCase, HardwareBoard } from '../../types/circuit';
+import { DEVICE_CATEGORY_META } from '../../components/circuitLabels';
+import { isFaultForBoard } from '../../data/registry';
 import type {
   BoardMatchCandidate,
   BoxRect,
@@ -251,22 +253,29 @@ function cellToBox(gx: number, gy: number, padX = 2, padY = 2): BoxRect {
   };
 }
 
-function mapZonesFromBoard(board: HardwareBoard, category: DeviceCategory): DetectedZoneBox[] {
+function mapZonesFromBoard(
+  board: HardwareBoard,
+  category: DeviceCategory,
+  preferPhotoBounds = false
+): DetectedZoneBox[] {
   if (board.zones.length > 0) {
-    return board.zones.slice(0, 6).map((z, idx) => ({
-      id: `det-zone-${z.id}`,
-      name: z.name,
-      description: z.description,
-      color: z.color || '#38bdf8',
-      confidence: Math.max(76, 94 - idx * 3),
-      box: {
-        x: Math.max(3, Math.min(82, z.bounds2d.x)),
-        y: Math.max(4, Math.min(82, z.bounds2d.y)),
-        w: Math.max(12, Math.min(48, z.bounds2d.w)),
-        h: Math.max(12, Math.min(48, z.bounds2d.h)),
-      },
-      mappedZoneId: z.id,
-    }));
+    return board.zones.slice(0, 6).map((z, idx) => {
+      const rect = preferPhotoBounds && z.photoBounds ? z.photoBounds : z.bounds2d;
+      return {
+        id: `det-zone-${z.id}`,
+        name: z.name,
+        description: z.description,
+        color: z.color || '#38bdf8',
+        confidence: Math.max(76, 94 - idx * 3),
+        box: {
+          x: Math.max(2, Math.min(82, rect.x)),
+          y: Math.max(2, Math.min(82, rect.y)),
+          w: Math.max(12, Math.min(65, rect.w)),
+          h: Math.max(12, Math.min(65, rect.h)),
+        },
+        mappedZoneId: z.id,
+      };
+    });
   }
 
   if (category === 'psu') {
@@ -351,7 +360,7 @@ function rankBoardsAndFaults(
 
     if (board.category === category) {
       score += 24;
-      reasons.push(category === 'psu' ? 'Đúng phân loại Nguồn ATX' : 'Đúng phân loại Mainboard');
+      reasons.push(`Đúng phân loại ${DEVICE_CATEGORY_META[category].shortLabel}`);
     } else {
       score -= 22;
     }
@@ -400,7 +409,7 @@ function rankBoardsAndFaults(
     .map((fault) => {
       let fScore = 0;
       if (fault.boardId === primaryBoard.id) fScore += 35;
-      else if (fault.boardId === 'all_motherboards' || fault.boardId === 'all_psu') fScore += 15;
+      else if (isFaultForBoard(fault, primaryBoard)) fScore += 15;
 
       const textBlob = `${fault.title} ${fault.symptom} ${fault.quickFixSummary} ${fault.suspectComponentIds.join(' ')}`.toLowerCase();
       const words = hint.split(/\s+/).filter((w) => w.length >= 2);
@@ -440,9 +449,11 @@ export async function runLocalVisionScan(params: {
   const { histogram, clusters } = await extractImageFeatures(imageUrl);
   const hint = hintText.toLowerCase();
 
-  // Heuristic category classification: PSU vs Motherboard
+  // Heuristic category classification across all 4 hardware categories
   let psuScore = 0;
   let mbScore = 0;
+  let gpuScore = 0;
+  let sbcScore = 0;
 
   if (histogram.yellowTransformerRatio > 0.012) psuScore += 42;
   if (histogram.brownRatio > 0.08) psuScore += 28;
@@ -456,15 +467,31 @@ export async function runLocalVisionScan(params: {
   if (/(main|mainboard|vrm|mosfet|drmos|lga|am4|ram|dimm|bios|super i\/o|rsmrst|asus|gigabyte|msi|asrock|h81|b550|b760|b660)/i.test(hint)) {
     mbScore += 45;
   }
+  if (/(gtx|rtx|gpu|vga|gddr|nvvdd|fbvddq|gp102|shunt|r005|1080)/i.test(hint)) {
+    gpuScore += 55;
+  }
+  if (/(arduino|uno|pico|rp2040|raspberry|bcm2711|mxl7704|atmega|ncp1117|gpio)/i.test(hint)) {
+    sbcScore += 55;
+  }
 
   if (targetBoardOverrideId) {
     const target = boards.find((b) => b.id === targetBoardOverrideId);
-    if (target?.category === 'psu') psuScore += 60;
-    if (target?.category === 'motherboard') mbScore += 60;
+    if (target?.category === 'psu') psuScore += 75;
+    if (target?.category === 'motherboard') mbScore += 75;
+    if (target?.category === 'gpu') gpuScore += 75;
+    if (target?.category === 'sbc_mcu') sbcScore += 75;
   }
 
-  const detectedCategory: DeviceCategory = psuScore > mbScore ? 'psu' : 'motherboard';
-  const confidence = Math.min(97, Math.max(71, Math.round(72 + Math.abs(psuScore - mbScore) * 0.45)));
+  const catScores: Array<{ cat: DeviceCategory; score: number }> = [
+    { cat: 'motherboard', score: mbScore },
+    { cat: 'psu', score: psuScore },
+    { cat: 'gpu', score: gpuScore },
+    { cat: 'sbc_mcu', score: sbcScore },
+  ];
+  catScores.sort((a, b) => b.score - a.score);
+  const detectedCategory: DeviceCategory = catScores[0].cat;
+  const secondScore = catScores[1]?.score ?? 0;
+  const confidence = Math.min(97, Math.max(71, Math.round(72 + Math.abs(catScores[0].score - secondScore) * 0.45)));
 
   const { matchedBoards, primaryBoard, suggestedFaults } = rankBoardsAndFaults(
     boards,
@@ -475,7 +502,8 @@ export async function runLocalVisionScan(params: {
     targetBoardOverrideId
   );
 
-  const detectedZones = mapZonesFromBoard(primaryBoard, detectedCategory);
+  const isRealBoardPhoto = Boolean(primaryBoard.realPhoto && imageUrl.includes(primaryBoard.realPhoto.imageUrl.replace('./', '')));
+  const detectedZones = mapZonesFromBoard(primaryBoard, detectedCategory, isRealBoardPhoto || Boolean(targetBoardOverrideId && primaryBoard.realPhoto));
   const anomalies: DetectedAnomaly[] = [];
 
   if (clusters.sootCells.length > 0) {
@@ -556,7 +584,7 @@ export async function runLocalVisionScan(params: {
     engineUsed: 'local',
     timestamp: new Date().toLocaleTimeString('vi-VN'),
     detectedCategory,
-    categoryLabel: detectedCategory === 'psu' ? 'Nguồn Máy Tính ATX (PSU)' : 'Mainboard Máy Tính Desktop',
+    categoryLabel: DEVICE_CATEGORY_META[detectedCategory].label,
     confidence,
     brandGuess: primaryBoard.brand,
     modelGuess: primaryBoard.name,
@@ -602,10 +630,10 @@ export async function runGeminiVisionScan(params: {
     const { histogram, base64Jpeg } = await extractImageFeatures(imageUrl);
 
     const promptText = [
-      'Bạn là kỹ sư chuyên sửa chữa Mainboard PC và Nguồn ATX (PSU).',
+      'Bạn là kỹ sư chuyên sửa chữa Mainboard PC, Nguồn ATX (PSU), Card VGA và bo nhúng SBC.',
       'Hãy phân tích ảnh bảng mạch điện tử đính kèm và trả về DUY NHẤT JSON hợp lệ theo schema sau (bằng tiếng Việt):',
       '{',
-      '  "boardCategory": "motherboard" | "psu",',
+      '  "boardCategory": "motherboard" | "psu" | "gpu" | "sbc_mcu",',
       '  "brandGuess": "tên hãng đoán được (vd ASUS, Gigabyte, MSI, ASRock, Corsair, Seasonic, Cooler Master, Generic)",',
       '  "modelGuess": "tên dòng mạch hoặc topology (vd LGA1700 B760, AM4 B550, LLC+DC-DC, TL494)",',
       '  "confidence": 85,',
@@ -664,7 +692,11 @@ export async function runGeminiVisionScan(params: {
       .trim();
 
     const parsed = JSON.parse(cleanedJson) as GeminiVisionJsonResponse;
-    const category: DeviceCategory = parsed.boardCategory === 'psu' ? 'psu' : 'motherboard';
+    const validCategories: DeviceCategory[] = ['motherboard', 'psu', 'gpu', 'sbc_mcu'];
+    const category: DeviceCategory =
+      parsed.boardCategory && validCategories.includes(parsed.boardCategory)
+        ? parsed.boardCategory
+        : 'motherboard';
     const combinedHint = `${hintText} ${parsed.brandGuess ?? ''} ${parsed.modelGuess ?? ''} ${(parsed.visibleComponents ?? []).join(' ')}`;
 
     const { matchedBoards, primaryBoard, suggestedFaults } = rankBoardsAndFaults(
@@ -723,7 +755,7 @@ export async function runGeminiVisionScan(params: {
       engineUsed: 'gemini',
       timestamp: new Date().toLocaleTimeString('vi-VN'),
       detectedCategory: category,
-      categoryLabel: category === 'psu' ? 'Nguồn Máy Tính ATX (PSU)' : 'Mainboard Máy Tính Desktop',
+      categoryLabel: DEVICE_CATEGORY_META[category].label,
       confidence: Math.min(99, Math.max(65, Number(parsed.confidence ?? 91))),
       brandGuess: parsed.brandGuess || primaryBoard.brand,
       modelGuess: parsed.modelGuess || primaryBoard.name,

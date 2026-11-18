@@ -1,4 +1,73 @@
-import { ComponentKind, FaultCase, PowerRailNet, ViewMode } from '../types/circuit';
+import {
+  ComponentKind,
+  DeviceCategory,
+  FaultCase,
+  PowerRailNet,
+  SchematicStatus,
+  ViewMode,
+} from '../types/circuit';
+
+export const DEVICE_CATEGORY_META: Record<
+  DeviceCategory,
+  { label: string; shortLabel: string; badgeClass: string }
+> = {
+  motherboard: {
+    label: 'Mainboard PC (Desktop)',
+    shortLabel: 'Mainboard',
+    badgeClass: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  },
+  psu: {
+    label: 'Nguồn Máy Tính ATX (PSU)',
+    shortLabel: 'Nguồn ATX',
+    badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  },
+  gpu: {
+    label: 'Card Đồ Họa Rời (VGA / GPU)',
+    shortLabel: 'Card VGA',
+    badgeClass: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+  },
+  sbc_mcu: {
+    label: 'Bo Mạch Nhúng & SBC (Open HW)',
+    shortLabel: 'Nhúng / SBC',
+    badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  },
+};
+
+export const SCHEMATIC_STATUS_META: Record<
+  SchematicStatus,
+  { label: string; shortLabel: string; badgeClass: string; description: string }
+> = {
+  official_full: {
+    label: 'Schematic Chính Thức (Full)',
+    shortLabel: 'Schematic gốc',
+    badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35',
+    description: 'Sơ đồ nguyên lý đầy đủ được hãng công bố công khai (Open Hardware).',
+  },
+  official_partial: {
+    label: 'Schematic Chính Thức (Rút gọn)',
+    shortLabel: 'Schematic rút gọn',
+    badgeClass: 'bg-teal-500/15 text-teal-300 border-teal-500/35',
+    description: 'Hãng chỉ công bố sơ đồ khối nguồn/ngoại vi chính thức, ẩn kết nối BGA nội bộ.',
+  },
+  public_reference: {
+    label: 'Mạch Chuẩn Công Khai (TL494)',
+    shortLabel: 'Chuẩn công khai',
+    badgeClass: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/35',
+    description: 'Sơ đồ tham chiếu chuẩn datasheet & mạch phổ thông công khai.',
+  },
+  block_reference: {
+    label: 'Sơ Đồ Khối Tham Chiếu IC',
+    shortLabel: 'Khối tham chiếu',
+    badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/35',
+    description: 'Hãng bảo mật Schematic gốc NDA; sơ đồ chỉ mô tả khối nguồn theo datasheet IC.',
+  },
+  unavailable: {
+    label: 'Để Trống Schematic (Hãng Bảo Mật NDA)',
+    shortLabel: 'Không có Schematic',
+    badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/35',
+    description: 'Hãng bảo mật hoàn toàn Schematic & BoardView gốc; ứng dụng để trống để không suy diễn sai.',
+  },
+};
 
 export const COMPONENT_KIND_LABELS: Record<ComponentKind, string> = {
   cpu_socket: 'Socket CPU',
@@ -111,7 +180,7 @@ export const VIEW_MODE_META: Record<
   library: {
     label: 'Thư Viện & Chuỗi Nguồn',
     shortLabel: 'Thư Viện',
-    description: 'Tra cứu linh kiện, datasheet chân đo và chuỗi kích nguồn Intel/AMD/PSU',
+    description: 'Tra cứu linh kiện, datasheet chân đo và chuỗi kích nguồn Intel/AMD/PSU/SBC',
     shortcut: '8',
   },
 };

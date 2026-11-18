@@ -30,7 +30,7 @@ export const MultimeterBar: React.FC<MultimeterBarProps> = ({
     : undefined;
 
   return (
-    <footer className="z-20 shrink-0 border-t border-cyan-500/15 bg-[#080D17]/95 px-4 py-1.5 backdrop-blur-md">
+    <footer className="cm-shell-footer z-20 shrink-0 border-t border-slate-800 bg-[#141d2e]/95 px-4 py-1.5 backdrop-blur-md">
       <div className="flex flex-wrap items-center justify-between gap-3 text-[11px]">
         {/* Left: Digital Multimeter Live Readout */}
         <div className="flex flex-wrap items-center gap-3 min-w-0">
@@ -116,6 +116,11 @@ export const MultimeterBar: React.FC<MultimeterBarProps> = ({
             <span className="inline-flex items-center gap-1 rounded border border-rose-500/35 bg-rose-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-300">
               <AlertOctagon className="h-3 w-3 text-rose-400" />
               HV 390VDC — Xả tụ chính trước khi đo nguội
+            </span>
+          ) : selectedBoard.category === 'gpu' ? (
+            <span className="inline-flex items-center gap-1 rounded border border-amber-500/35 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-300">
+              <AlertOctagon className="h-3 w-3 text-amber-400" />
+              NVVDD rất thấp (0.2–0.6Ω): Phân biệt kỹ bằng thang 0.1Ω
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 rounded border border-slate-800 bg-slate-900/80 px-2 py-0.5 font-mono text-[10px] text-slate-400">

@@ -96,7 +96,7 @@ export interface ScanPreset {
 }
 
 export interface GeminiVisionJsonResponse {
-  boardCategory?: 'motherboard' | 'psu';
+  boardCategory?: DeviceCategory;
   brandGuess?: string;
   modelGuess?: string;
   confidence?: number;

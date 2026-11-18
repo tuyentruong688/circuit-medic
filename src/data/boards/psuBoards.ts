@@ -16,6 +16,13 @@ export const PSU_BOARDS: HardwareBoard[] = [
     summary: 'Bộ nguồn Corsair RM750x chuẩn 80 PLUS Gold cao cấp. Sử dụng kiến trúc lọc EMI 2 cấp, Active PFC nâng áp 390VDC ổn định, mạch cộng hưởng Half-Bridge LLC sơ cấp hiệu suất cao, nắn đồng bộ SR (Synchronous Rectification) 12V và module VRM DC-DC con độc lập sinh áp 5V / 3.3V.',
     safetyWarning: 'CẢNH BÁO NGUY HIỂM ĐIỆN ÁP CAO (HIGH VOLTAGE 390VDC): Tụ hóa cao áp C_BULK1 lưu trữ điện áp 380V - 400VDC cực kỳ nguy hiểm, có thể gây điện giật tê liệt tim tử vong ngay cả khi đã rút phích cắm AC! BẮT BUỘC dùng điện trở công suất 1kΩ/10W hoặc bóng đèn tròn sợi đốt 220V/100W xả sạch điện áp trên tụ sơ cấp trước khi chạm vào bo mạch. Luôn cắm nguồn qua bóng đèn tải giả nối tiếp (Series Lamp Limiter) khi kích nguồn thử nghiệm.',
     powerSequenceId: 'seq-psu-llc-dcdc',
+    supports3DSimulation: true,
+    docsMeta: {
+      schematicStatus: 'block_reference',
+      schematicSourceLabel: 'Sơ đồ khối tham chiếu theo Datasheet IC (CM6500UNX / CM6901X / WT7502)',
+      missingDataNote:
+        'Corsair / CWT không công bố Schematic & BoardView gốc dòng RM750x. Chưa có ảnh chụp thực tế bản quyền mở cho model này nên phần Ảnh Thực Tế được để trống.',
+    },
     zones: [
       {
         id: 'zone-emi',
@@ -607,6 +614,13 @@ export const PSU_BOARDS: HardwareBoard[] = [
     summary: 'Nền tảng Seasonic Focus GX huyền thoại với thiết kế mạch Full-Bridge LLC siêu gọn 140mm, độ ổn định điện áp chặt chẽ (Tight Voltage Regulation < 1.5%), 100% tụ điện Nhật Bản Rubycon/Nippon Chemi-Con và hệ thống bảo vệ đa tầng cao cấp.',
     safetyWarning: 'CẢNH BÁO CAO ÁP SƠ CẤP NGUY HIỂM: Tụ lọc sơ cấp tích trữ điện áp 380V - 400VDC. Tuyệt đối không cắm điện khi chưa đậy nắp hoặc chạm tay vào khu vực tản nhiệt sơ cấp. Bắt buộc dùng bóng đèn xả tụ trước khi dùng que đo kiểm tra linh kiện.',
     powerSequenceId: 'seq-psu-llc-dcdc',
+    supports3DSimulation: true,
+    docsMeta: {
+      schematicStatus: 'block_reference',
+      schematicSourceLabel: 'Sơ đồ khối tham chiếu theo Datasheet IC (CM6500 / CM6901 / WT7527V)',
+      missingDataNote:
+        'Seasonic không công bố Schematic nội bộ dòng Focus GX-650. Chưa có ảnh chụp thực tế bản quyền mở cho model này nên phần Ảnh Thực Tế được để trống.',
+    },
     zones: [
       {
         id: 'zone-emi',
@@ -1064,6 +1078,13 @@ export const PSU_BOARDS: HardwareBoard[] = [
     summary: 'Bộ nguồn quốc dân phân khúc phổ thông Cooler Master MWE 650 Bronze V2. Sử dụng mạch nâng áp Active PFC, sơ cấp Dual Forward hiệu suất tốt đạt chuẩn 80 Plus Bronze, chỉnh lưu thứ cấp Schottky và bo module VRM DC-DC con biến đổi 5V / 3.3V độc lập.',
     safetyWarning: 'CẢNH BÁO NGUY HIỂM CAO ÁP: Tụ hóa sơ cấp C_BULK1 tích điện 380VDC. Tuyệt đối không chạm tay vào cánh tản nhiệt sơ cấp khi đang cắm điện hoặc chưa xả tụ. Khi sửa chữa luôn sử dụng bóng đèn 60W-100W nối tiếp ngõ vào AC để bảo vệ.',
     powerSequenceId: 'seq-psu-llc-dcdc',
+    supports3DSimulation: true,
+    docsMeta: {
+      schematicStatus: 'block_reference',
+      schematicSourceLabel: 'Sơ đồ khối tham chiếu theo Datasheet IC (CM6800UX / EM8569 / ST9S429)',
+      missingDataNote:
+        'Cooler Master không công bố Schematic gốc dòng MWE Bronze V2. Chưa có ảnh chụp thực tế bản quyền mở cho model này nên phần Ảnh Thực Tế được để trống.',
+    },
     zones: [
       {
         id: 'zone-emi',
@@ -1488,48 +1509,68 @@ export const PSU_BOARDS: HardwareBoard[] = [
     summary: 'Sơ đồ bộ nguồn máy tính ATX kinh điển sử dụng IC điều chế độ rộng xung TL494 (hoặc KA7500B), cặp bóng bán dẫn công suất lưỡng cực BJT NPN MJE13007 / 13009 mắc theo kiểu nửa cầu (Half-Bridge), mạch nắn lọc chung cuộn cảm từ tính (Group Regulation Choke) và IC so sánh bảo vệ LM339 / LP7510. Dòng nguồn phổ biến nhất tại các tiệm net và văn phòng Việt Nam.',
     safetyWarning: 'CẢNH BÁO NGUY HIỂM ĐIỆN GIẬT 310VDC: Hai tụ lọc cao áp C_HV1 & C_HV2 mắc nối tiếp tạo điểm giữa 155VDC, tích trữ điện thế lên tới 310VDC rất dễ gây giật chết người. Cánh tản nhiệt sơ cấp gắn BJT 13007 mang điện thế cao áp trực tiếp! Bắt buộc xả tụ và luôn cắm nối tiếp qua bóng đèn dây tóc 220V/60W khi thử kích nguồn.',
     powerSequenceId: 'seq-psu-tl494',
+    supports3DSimulation: true,
+    realPhoto: {
+      imageUrl: './boards/atx-psu-tl494.jpg',
+      sourceLabel: 'Wikimedia Commons — File:ATX power supply interior.jpg',
+      sourceUrl: 'https://commons.wikimedia.org/wiki/File:ATX_power_supply_interior.jpg',
+      license: 'Public Domain',
+      author: 'Alan Liefting',
+      viewNote:
+        'Ảnh nội thất thực tế bộ nguồn ATX Half-Bridge kinh điển (A: Cầu nắn/Lọc EMI, B: Cặp tụ 200V, C: Biến áp chính, D: Cuộn cảm lọc chung, E: Tụ lọc ngõ ra). Một số IC DIP điều khiển bị che khuất bởi bó dây và cánh tản nhiệt.',
+    },
+    docsMeta: {
+      schematicStatus: 'public_reference',
+      schematicSourceLabel: 'Mạch Half-Bridge ATX phổ thông công khai (TL494 / KA7500B + LM339)',
+    },
     zones: [
       {
         id: 'zone-emi',
         name: 'Tầng Chỉnh Lưu AC & Cặp Tụ Nối Tiếp Điểm Giữa',
         description: 'Cầu đi-ốt nắn dòng ngõ vào và cặp tụ hóa cao áp 200V mắc nối tiếp tạo điểm cân bằng 155V cho sơ đồ nửa cầu.',
         color: '#4f46e5',
-        bounds2d: { x: 5, y: 5, w: 26, h: 42 }
+        bounds2d: { x: 5, y: 5, w: 26, h: 42 },
+        photoBounds: { x: 6, y: 12, w: 17, h: 60 }
       },
       {
         id: 'zone-5vsb',
         name: 'Mạch Nguồn Cấp Trước 5VSB (Transistor 2N60/C5027)',
         description: 'Mạch tự kích dao động nghẹt Flyback dùng bóng C5027 hoặc 2N60 tạo nguồn 5VSB nuôi chân 9 giắc 24-pin.',
         color: '#eab308',
-        bounds2d: { x: 33, y: 5, w: 33, h: 42 }
+        bounds2d: { x: 33, y: 5, w: 33, h: 42 },
+        photoBounds: { x: 32, y: 12, w: 18, h: 20 }
       },
       {
         id: 'zone-pwm-sec',
         name: 'Mạch Điều Khiển Trung Tâm TL494 & Kích Lái Biến Áp Driver',
         description: 'IC kinh điển TL494 / KA7500B điều chế xung lái qua 2 bóng transistor đệm C945 và biến áp đảo pha kích 2 bóng công suất.',
         color: '#0284c7',
-        bounds2d: { x: 68, y: 5, w: 27, h: 42 }
+        bounds2d: { x: 68, y: 5, w: 27, h: 42 },
+        photoBounds: { x: 28, y: 51, w: 28, h: 22 }
       },
       {
         id: 'zone-halfbridge',
         name: 'Cặp Bóng BJT Công Suất Nửa Cầu MJE13007/13009',
         description: 'Hai bóng BJT NPN công suất cao chịu áp 700V đóng cắt luân phiên nạp xả dòng điện qua biến áp xung chính EI-33.',
         color: '#dc2626',
-        bounds2d: { x: 5, y: 50, w: 32, h: 45 }
+        bounds2d: { x: 5, y: 50, w: 32, h: 45 },
+        photoBounds: { x: 20, y: 11, w: 11, h: 42 }
       },
       {
         id: 'zone-sec-group',
         name: 'Chỉnh Lưu Thứ Cấp & Cuộn Cảm Lọc Chung Từ Tính',
         description: 'Các cặp đi-ốt kép Schottky nắn 12V, 5V, 3.3V đi qua cuộn cảm lõi xuyến lọc chung nhiều vòng dây.',
         color: '#10b981',
-        bounds2d: { x: 39, y: 50, w: 34, h: 45 }
+        bounds2d: { x: 39, y: 50, w: 34, h: 45 },
+        photoBounds: { x: 31, y: 29, w: 42, h: 40 }
       },
       {
         id: 'zone-protection',
         name: 'Mạch Bảo Vệ LM339 & Giắc Ra ATX',
         description: 'IC so sánh khuếch đại thuật toán LM339 hoặc LP7510 giám sát bảo vệ và xuất cờ Power Good.',
         color: '#8b5cf6',
-        bounds2d: { x: 75, y: 50, w: 20, h: 45 }
+        bounds2d: { x: 75, y: 50, w: 20, h: 45 },
+        photoBounds: { x: 66, y: 2, w: 29, h: 66 }
       }
     ],
     rails: [
@@ -1626,6 +1667,7 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: '5A 250VAC ngắt nhanh',
         pos3d: { x: -36, y: 0, z: -26, w: 5, d: 12, h: 5, color: '#f3f4f6' },
         pos2d: { x: 8, y: 14, w: 5, h: 8 },
+        photoPos: { x: 11, y: 57.5, w: 11, h: 5.5 },
         schematicPos: { x: 80, y: 140 },
         pins: [
           { pin: '1', name: 'AC_L_IN', net: 'AC_LINE', expectedVoltage: '220VAC', expectedDiodeDrop: 'OL' },
@@ -1646,6 +1688,8 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: '600V 4A cầu nắn dẹp',
         pos3d: { x: -24, y: 0, z: -24, w: 4, d: 14, h: 14, color: '#1f2937' },
         pos2d: { x: 20, y: 16, w: 6, h: 12 },
+        photoPos: { x: 12.5, y: 42.5, w: 8, h: 6.5 },
+        photoNote: 'Cầu đi-ốt nằm ngay phía sau cuộn lọc EMI (vị trí A)',
         schematicPos: { x: 170, y: 140 },
         pins: [
           { pin: '1', name: 'AC1', net: 'AC_LINE', expectedVoltage: '220VAC', expectedDiodeDrop: 'OL' },
@@ -1668,6 +1712,7 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: '200V 470µF 85°C (Cặp đôi nối tiếp)',
         pos3d: { x: -8, y: 0, z: -20, w: 18, d: 18, h: 26, color: '#1e3a8a' },
         pos2d: { x: 30, y: 14, w: 8, h: 16 },
+        photoPos: { x: 8, y: 14, w: 13.5, h: 28.5 },
         schematicPos: { x: 270, y: 140 },
         pins: [
           { pin: '+', name: 'POS', net: 'HV_310V_DC', expectedVoltage: '310VDC', expectedDiodeDrop: 'OL' },
@@ -1689,6 +1734,8 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: '800V 3A BJT công suất cao',
         pos3d: { x: 14, y: 0, z: -22, w: 5, d: 10, h: 14, color: '#111827' },
         pos2d: { x: 44, y: 14, w: 5, h: 10 },
+        photoPos: { x: 21, y: 38, w: 7, h: 12 },
+        photoNote: 'Gắn trên thanh nhôm tản nhiệt sơ cấp',
         schematicPos: { x: 380, y: 140 },
         pins: [
           { pin: 'B', name: 'BASE', net: 'HV_310V_DC', expectedVoltage: '0.7V', expectedDiodeDrop: '0.680V' },
@@ -1710,6 +1757,7 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: 'Biến áp xung 5VSB + Cuộn nuôi VCC TL494',
         pos3d: { x: 24, y: 0, z: -15, w: 12, d: 12, h: 14, color: '#78350f' },
         pos2d: { x: 54, y: 14, w: 7, h: 10 },
+        photoPos: { x: 38.5, y: 14, w: 10, h: 15.5 },
         schematicPos: { x: 480, y: 140 },
         pins: [
           { pin: '1', name: 'PRI', net: 'HV_310V_DC', expectedVoltage: '310V Xung', expectedDiodeDrop: 'OL' },
@@ -1731,6 +1779,7 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: '10V 1000µF Low-ESR',
         pos3d: { x: 32, y: 0, z: -8, w: 8, d: 8, h: 12, color: '#1e3a8a' },
         pos2d: { x: 63, y: 16, w: 5, h: 8 },
+        photoPos: { x: 61, y: 12, w: 6, h: 8 },
         schematicPos: { x: 570, y: 140 },
         pins: [
           { pin: '+', name: '5VSB_OUT', net: '+5VSB', expectedVoltage: '5.0V', expectedDiodeDrop: '0.350V' },
@@ -1774,6 +1823,7 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: 'Biến áp đảo pha kích lái cách ly 2 kênh BJT',
         pos3d: { x: 10, y: 0, z: 8, w: 10, d: 10, h: 12, color: '#78350f' },
         pos2d: { x: 60, y: 32, w: 6, h: 8 },
+        photoPos: { x: 42, y: 52.5, w: 7.5, h: 7.5 },
         schematicPos: { x: 600, y: 280 },
         pins: [
           { pin: '1', name: 'PRI_A', net: 'VCC_TL494', expectedVoltage: 'Xung kích từ C945', expectedDiodeDrop: 'OL' },
@@ -1795,6 +1845,8 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: 'NPN Bipolar Power Transistor 700V 8A-12A TO-220',
         pos3d: { x: -16, y: 0, z: 12, w: 5, d: 12, h: 16, color: '#111827' },
         pos2d: { x: 18, y: 56, w: 5, h: 12 },
+        photoPos: { x: 21, y: 12, w: 7, h: 13 },
+        photoNote: 'Bắt vít trên thanh tản nhiệt nhôm sơ cấp',
         schematicPos: { x: 220, y: 420 },
         pins: [
           { pin: 'B', name: 'BASE', net: 'HV_310V_DC', expectedVoltage: 'Xung lái 0.7V', expectedDiodeDrop: '0.680V (B->E)' },
@@ -1816,6 +1868,8 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: 'NPN Bipolar Power Transistor 700V 8A-12A TO-220',
         pos3d: { x: -16, y: 0, z: 26, w: 5, d: 12, h: 16, color: '#111827' },
         pos2d: { x: 18, y: 72, w: 5, h: 12 },
+        photoPos: { x: 21, y: 26, w: 7, h: 12 },
+        photoNote: 'Bắt vít trên thanh tản nhiệt nhôm sơ cấp',
         schematicPos: { x: 220, y: 540 },
         pins: [
           { pin: 'B', name: 'BASE', net: 'HV_310V_DC', expectedVoltage: 'Xung lái 0.7V', expectedDiodeDrop: '0.680V (B->E)' },
@@ -1837,6 +1891,7 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: 'Biến áp lõi Ferrite EI-33 công suất 350W-450W',
         pos3d: { x: 2, y: 0, z: 18, w: 22, d: 22, h: 26, color: '#78350f' },
         pos2d: { x: 34, y: 60, w: 12, h: 18 },
+        photoPos: { x: 31.5, y: 30, w: 16.5, h: 21 },
         schematicPos: { x: 380, y: 480 },
         pins: [
           { pin: '1', name: 'PRI_A', net: 'HV_310V_DC', expectedVoltage: 'Xung nửa cầu 155V', expectedDiodeDrop: 'OL' },
@@ -1860,6 +1915,8 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: 'Fast Recovery Dual Diode 200V 16A-20A TO-220',
         pos3d: { x: 18, y: 0, z: 14, w: 5, d: 12, h: 16, color: '#1f2937' },
         pos2d: { x: 50, y: 56, w: 5, h: 12 },
+        photoPos: { x: 50.5, y: 14, w: 7.5, h: 17 },
+        photoNote: 'Bắt vít trên thanh tản nhiệt nhôm thứ cấp',
         schematicPos: { x: 510, y: 440 },
         pins: [
           { pin: 'A1', name: 'ANODE1', net: '+12V_OUT', expectedVoltage: 'Xung nắn', expectedDiodeDrop: '0.480V' },
@@ -1881,6 +1938,8 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: 'Schottky Barrier 40V-45V 30A TO-247/TO-220',
         pos3d: { x: 18, y: 0, z: 26, w: 5, d: 12, h: 16, color: '#1f2937' },
         pos2d: { x: 50, y: 72, w: 5, h: 12 },
+        photoPos: { x: 50.5, y: 33, w: 7.5, h: 17 },
+        photoNote: 'Bắt vít trên thanh tản nhiệt nhôm thứ cấp',
         schematicPos: { x: 510, y: 560 },
         pins: [
           { pin: 'A1', name: 'ANODE1', net: '+5V_OUT', expectedVoltage: 'Xung nắn', expectedDiodeDrop: '0.280V' },
@@ -1902,6 +1961,7 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: 'Lõi xuyến bột sắt từ tính quấn nhiều dây đồng',
         pos3d: { x: 26, y: 0, z: 20, w: 16, d: 16, h: 18, color: '#b45309' },
         pos2d: { x: 58, y: 64, w: 8, h: 14 },
+        photoPos: { x: 60.5, y: 24.5, w: 10.5, h: 14.5 },
         schematicPos: { x: 630, y: 500 },
         pins: [
           { pin: '12V_IN', name: '12V_IN', net: '+12V_OUT', expectedVoltage: '12.0V Xung', expectedDiodeDrop: '0.050V' },
@@ -1924,6 +1984,7 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: '16V 1500µF 105°C',
         pos3d: { x: 34, y: 0, z: 12, w: 8, d: 8, h: 16, color: '#1e3a8a' },
         pos2d: { x: 68, y: 58, w: 5, h: 10 },
+        photoPos: { x: 70.5, y: 24, w: 8, h: 11 },
         schematicPos: { x: 740, y: 460 },
         pins: [
           { pin: '+', name: 'POS', net: '+12V_OUT', expectedVoltage: '12.0V', expectedDiodeDrop: '0.420V' },
@@ -1965,6 +2026,8 @@ export const PSU_BOARDS: HardwareBoard[] = [
         specs: 'Bó dây bọc lưới hoặc dây rời chuẩn màu quốc tế',
         pos3d: { x: 42, y: 0, z: 22, w: 6, d: 22, h: 12, color: '#111827' },
         pos2d: { x: 86, y: 58, w: 9, h: 26 },
+        photoPos: { x: 78, y: 2, w: 16, h: 42 },
+        photoNote: 'Bó dây cáp đầu ra ATX 20+4 pin đi qua lỗ thoát vỏ nguồn',
         schematicPos: { x: 980, y: 480 },
         pins: [
           { pin: '8', name: 'PWR_OK (Xám)', net: 'PWR_OK', expectedVoltage: '5.0V', expectedDiodeDrop: '0.680V' },

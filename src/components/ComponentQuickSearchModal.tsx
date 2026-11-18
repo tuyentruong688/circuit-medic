@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Cpu, Search, X, Zap } from 'lucide-react';
 import { FaultCase, HardwareBoard } from '../types/circuit';
+import { isFaultForBoard } from '../data/registry';
 
 interface ComponentQuickSearchModalProps {
   open: boolean;
@@ -61,12 +62,7 @@ export const ComponentQuickSearchModal: React.FC<ComponentQuickSearchModalProps>
   }, [normalized, selectedBoard.rails]);
 
   const matchedFaults = useMemo(() => {
-    const boardFaults = faults.filter(
-      (f) =>
-        f.boardId === selectedBoard.id ||
-        (selectedBoard.category === 'motherboard' && f.boardId === 'all_motherboards') ||
-        (selectedBoard.category === 'psu' && f.boardId === 'all_psu')
-    );
+    const boardFaults = faults.filter((f) => isFaultForBoard(f, selectedBoard));
     if (!normalized) return boardFaults.slice(0, 4);
     return boardFaults
       .filter(

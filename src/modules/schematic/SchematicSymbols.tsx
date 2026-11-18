@@ -9,6 +9,7 @@ export interface SchematicSymbolProps {
   isDimmed: boolean;
   selectedPinName?: string | null;
   highlightedNetId?: string | null;
+  paperMode?: boolean;
   onSelectComponent: (componentId: string) => void;
   onSelectPin: (componentId: string, pin: PinMeasurement) => void;
   onHover?: (component: BoardComponent | null) => void;
@@ -156,6 +157,7 @@ export const SchematicSymbol: React.FC<SchematicSymbolProps> = ({
   isDimmed,
   selectedPinName,
   highlightedNetId,
+  paperMode = false,
   onSelectComponent,
   onSelectPin,
   onHover,
@@ -166,24 +168,46 @@ export const SchematicSymbol: React.FC<SchematicSymbolProps> = ({
   const hh = h / 2;
 
   const strokeMain = isSuspect
-    ? '#f43f5e'
+    ? paperMode
+      ? '#e11d48'
+      : '#f43f5e'
     : isSelected
-    ? '#38bdf8'
+    ? paperMode
+      ? '#0284c7'
+      : '#38bdf8'
     : isNetHighlighted
-    ? '#facc15'
+    ? paperMode
+      ? '#d97706'
+      : '#facc15'
+    : paperMode
+    ? '#1e293b'
     : '#7dd3fc';
 
   const strokeSub = isSuspect
-    ? '#fda4af'
+    ? paperMode
+      ? '#be123c'
+      : '#fda4af'
     : isSelected
-    ? '#bae6fd'
+    ? paperMode
+      ? '#0369a1'
+      : '#bae6fd'
+    : paperMode
+    ? '#475569'
     : '#94a3b8';
 
-  const bodyFill = isSelected
+  const bodyFill = paperMode
+    ? isSelected
+      ? 'rgba(2, 132, 199, 0.12)'
+      : isSuspect
+      ? 'rgba(225, 29, 72, 0.10)'
+      : 'rgba(255, 255, 255, 0.96)'
+    : isSelected
     ? 'rgba(14, 116, 144, 0.25)'
     : isSuspect
     ? 'rgba(159, 18, 57, 0.22)'
     : 'rgba(10, 22, 40, 0.92)';
+
+  const accentGold = paperMode ? '#b45309' : '#fbbf24';
 
   const renderDiscreteSymbol = () => {
     switch (component.kind) {
@@ -254,7 +278,7 @@ export const SchematicSymbol: React.FC<SchematicSymbolProps> = ({
               width={w}
               height={h}
               rx={4}
-              fill="rgba(6, 13, 24, 0.55)"
+              fill={paperMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(6, 13, 24, 0.55)'}
               stroke="transparent"
             />
             {/* Leads */}
@@ -531,7 +555,7 @@ export const SchematicSymbol: React.FC<SchematicSymbolProps> = ({
                   cx={pxStub}
                   cy={py}
                   r={isPinSelected ? 3.5 : 2.3}
-                  fill={isPinSelected ? '#facc15' : isPinOnNet ? '#22d3ee' : '#0f172a'}
+                  fill={isPinSelected ? accentGold : isPinOnNet ? '#0ea5e9' : paperMode ? '#ffffff' : '#0f172a'}
                   stroke={strokeMain}
                   strokeWidth={1.2}
                 />
@@ -541,7 +565,7 @@ export const SchematicSymbol: React.FC<SchematicSymbolProps> = ({
                   textAnchor={isLeft ? 'start' : 'end'}
                   fontSize={7.5}
                   fontFamily="monospace"
-                  fill={isPinSelected ? '#fde047' : '#cbd5e1'}
+                  fill={isPinSelected ? accentGold : paperMode ? '#1e293b' : '#cbd5e1'}
                 >
                   {pin.name.slice(0, 9)}
                 </text>
@@ -650,7 +674,19 @@ export const SchematicSymbol: React.FC<SchematicSymbolProps> = ({
         fontSize={10.5}
         fontWeight="700"
         fontFamily="monospace"
-        fill={isSuspect ? '#fda4af' : isSelected ? '#7dd3fc' : '#f8fafc'}
+        fill={
+          isSuspect
+            ? paperMode
+              ? '#be123c'
+              : '#fda4af'
+            : isSelected
+              ? paperMode
+                ? '#0369a1'
+                : '#7dd3fc'
+              : paperMode
+                ? '#0f172a'
+                : '#f8fafc'
+        }
       >
         {component.id}
         {component.partNumber ? ` · ${component.partNumber}` : ''}
@@ -663,7 +699,7 @@ export const SchematicSymbol: React.FC<SchematicSymbolProps> = ({
         textAnchor="middle"
         fontSize={8.5}
         fontFamily="sans-serif"
-        fill="#94a3b8"
+        fill={paperMode ? '#475569' : '#94a3b8'}
       >
         {component.label.length > 26 ? `${component.label.slice(0, 24)}…` : component.label}
       </text>

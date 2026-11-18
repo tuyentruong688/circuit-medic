@@ -37,6 +37,8 @@ import type {
   PowerSequenceStage,
   ViewMode,
 } from '../../types/circuit';
+import { isFaultForBoard } from '../../data/registry';
+import { DEVICE_CATEGORY_META, SCHEMATIC_STATUS_META } from '../../components/circuitLabels';
 import { findEquivalentsForComponent, getKindLabelVi } from './componentEquivalents';
 import { exportBoardAsJson, exportBoardAsMarkdown } from './exportHelpers';
 
@@ -44,11 +46,15 @@ type LibraryTab = 'catalog' | 'power_sequence' | 'cross_reference';
 
 const GENERATION_CHIPS = [
   { id: 'all', label: 'Tất cả đời mạch' },
-  { id: 'LGA1700', label: 'LGA1700 (B660/B760)' },
-  { id: 'AM4', label: 'AMD AM4 (B550)' },
-  { id: 'LGA1150', label: 'LGA1150 / H81-B85' },
-  { id: 'LLC', label: '80+ Gold LLC + DC-DC' },
-  { id: 'TL494', label: 'TL494 Half-Bridge' },
+  { id: 'AVR', label: 'Arduino AVR' },
+  { id: 'RP2040', label: 'Pico RP2040' },
+  { id: 'BCM2711', label: 'Raspberry Pi 4' },
+  { id: 'Pascal', label: 'VGA Pascal GTX' },
+  { id: 'LGA1700', label: 'LGA1700' },
+  { id: 'AM4', label: 'AMD AM4' },
+  { id: 'LGA1150', label: 'LGA1150 / H81' },
+  { id: 'LLC', label: '80+ Gold LLC' },
+  { id: 'TL494', label: 'TL494 ATX' },
 ];
 
 type KindGroupFilter =
@@ -176,12 +182,7 @@ export const HardwareLibraryModule: React.FC<ModuleSharedProps> = ({
 
   // Related faults per board helper
   const getFaultsForBoard = (board: HardwareBoard): FaultCase[] => {
-    return faults.filter(
-      (f) =>
-        f.boardId === board.id ||
-        (board.category === 'motherboard' && f.boardId === 'all_motherboards') ||
-        (board.category === 'psu' && f.boardId === 'all_psu')
-    );
+    return faults.filter((f) => isFaultForBoard(f, board));
   };
 
   // Filtered boards for Tab 1
@@ -367,17 +368,19 @@ export const HardwareLibraryModule: React.FC<ModuleSharedProps> = ({
                 />
               </div>
 
-              <div className="md:col-span-4 grid grid-cols-3 gap-1.5">
+              <div className="md:col-span-4 flex flex-wrap gap-1.5">
                 {[
                   { id: 'all', label: 'Tất cả' },
-                  { id: 'motherboard', label: 'Mainboard PC' },
-                  { id: 'psu', label: 'Nguồn PSU' },
+                  { id: 'sbc_mcu', label: DEVICE_CATEGORY_META.sbc_mcu.shortLabel },
+                  { id: 'gpu', label: DEVICE_CATEGORY_META.gpu.shortLabel },
+                  { id: 'motherboard', label: DEVICE_CATEGORY_META.motherboard.shortLabel },
+                  { id: 'psu', label: DEVICE_CATEGORY_META.psu.shortLabel },
                 ].map((c) => (
                   <button
                     key={c.id}
                     type="button"
                     onClick={() => setCatFilter(c.id as 'all' | DeviceCategory)}
-                    className={`py-2 px-2 rounded-lg text-xs font-medium border transition-colors ${
+                    className={`py-1.5 px-2.5 rounded-lg text-xs font-medium border transition-colors ${
                       catFilter === c.id
                         ? 'bg-cyan-500/20 border-cyan-400/60 text-cyan-200'
                         : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200'
@@ -458,14 +461,17 @@ export const HardwareLibraryModule: React.FC<ModuleSharedProps> = ({
                           <div>
                             <div className="flex flex-wrap items-center gap-1.5 mb-1">
                               <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                                  board.category === 'motherboard'
-                                    ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
-                                    : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                                }`}
+                                className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${DEVICE_CATEGORY_META[board.category].badgeClass}`}
                               >
-                                {board.category === 'motherboard' ? 'Mainboard PC' : 'Nguồn PSU'}
+                                {DEVICE_CATEGORY_META[board.category].shortLabel}
                               </span>
+                              {board.docsMeta && (
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-medium border ${SCHEMATIC_STATUS_META[board.docsMeta.schematicStatus].badgeClass}`}
+                                >
+                                  {SCHEMATIC_STATUS_META[board.docsMeta.schematicStatus].shortLabel}
+                                </span>
+                              )}
                               <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-200 border border-slate-700">
                                 {board.brand}
                               </span>
@@ -659,13 +665,9 @@ export const HardwareLibraryModule: React.FC<ModuleSharedProps> = ({
                   >
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                          seq.category === 'motherboard'
-                            ? 'bg-cyan-500/20 text-cyan-300'
-                            : 'bg-amber-500/20 text-amber-300'
-                        }`}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${DEVICE_CATEGORY_META[seq.category].badgeClass}`}
                       >
-                        {seq.category === 'motherboard' ? 'Mainboard' : 'Nguồn PSU'}
+                        {DEVICE_CATEGORY_META[seq.category].shortLabel}
                       </span>
                       <span className="text-[10px] font-mono text-slate-400">
                         {seq.stages.length} bước
@@ -972,7 +974,9 @@ export const HardwareLibraryModule: React.FC<ModuleSharedProps> = ({
                   onChange={(e) => setXrefCategory(e.target.value as 'all' | DeviceCategory)}
                   className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
                 >
-                  <option value="all">Cả Mainboard & Nguồn PSU</option>
+                  <option value="all">Tất cả phân loại bo mạch</option>
+                  <option value="sbc_mcu">Chỉ Nhúng & SBC (Arduino / RPi)</option>
+                  <option value="gpu">Chỉ Card Đồ Họa VGA / GPU</option>
                   <option value="motherboard">Chỉ Mainboard PC</option>
                   <option value="psu">Chỉ Nguồn ATX (PSU)</option>
                 </select>

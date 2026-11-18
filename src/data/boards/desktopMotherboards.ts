@@ -14,6 +14,13 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
     pcbColor: '#121316',
     pcbSize: { width: 100, depth: 82, thickness: 2 },
     powerSequenceId: 'seq-intel-lga1700',
+    supports3DSimulation: true,
+    docsMeta: {
+      schematicStatus: 'block_reference',
+      schematicSourceLabel: 'Sơ đồ khối tham chiếu theo Datasheet IC (RAA229131 / ISL99390 / NCT6798D)',
+      missingDataNote:
+        'ASUS bảo mật Schematic (.pdf) & BoardView (.fz/.asc) gốc theo NDA. Ứng dụng chưa có ảnh chụp trần bản quyền mở cho model này nên phần Ảnh Thực Tế được để trống; Sơ đồ nguyên lý chỉ biểu diễn luồng nguồn tham chiếu theo datasheet các IC chính.',
+    },
     summary: 'Bo mạch chủ gaming cao cấp socket LGA1700, thiết kế dàn VRM 16+1 phase DrMOS 90A ISL99390, quản lý bởi controller RAA229131, hỗ trợ DDR5 kênh đôi và PCIe 5.0 x16. Mạch bảo vệ ESD và chuỗi khởi động chuẩn Intel 700 Series PCH.',
     safetyWarning: 'LƯU Ý: Vcore cấp nguồn dòng điện cực lớn lên tới 100A+ ở điện áp thấp (~1.1V). Khi đo đạc khu vực DrMOS và tụ lọc VCORE, tuyệt đối không chạm trượt que đo giữa chân Phase (SW) và chân Vin 12V gây phóng tia lửa điện phá hủy CPU socket!',
     zones: [
@@ -581,6 +588,13 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
     pcbColor: '#1a1f2c',
     pcbSize: { width: 85, depth: 85, thickness: 1.8 },
     powerSequenceId: 'seq-intel-lga1700',
+    supports3DSimulation: true,
+    docsMeta: {
+      schematicStatus: 'block_reference',
+      schematicSourceLabel: 'Sơ đồ khối tham chiếu theo Datasheet IC (4C10N / 4C06N / IT8689E)',
+      missingDataNote:
+        'Gigabyte không công bố công khai Schematic & BoardView gốc dòng B660M. Chưa có ảnh chụp thực tế bản quyền mở cho model này nên phần Ảnh Thực Tế được để trống; không dùng ảnh bo mạch khác thay thế.',
+    },
     summary: 'Bo mạch chủ văn phòng và phổ thông bền bỉ Ultra Durable LGA1700, kiến trúc nguồn 6+2+1 phase dùng MOSFET rời OnSemi 4C10N/4C06N, Super I/O ITE IT8689E và chip quản lý RAM DDR4 riêng biệt.',
     safetyWarning: 'CHÚ Ý: Thiết kế MOSFET rời không có heatsink tản nhiệt dày ở các phase phụ, khi chạy Stress-test nhiệt độ lưng MOSFET có thể vượt 90°C. Cẩn thận bỏng tay khi sờ trực tiếp!',
     zones: [
@@ -988,6 +1002,22 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
     pcbColor: '#1c1c1f',
     pcbSize: { width: 100, depth: 82, thickness: 2 },
     powerSequenceId: 'seq-amd-am4',
+    supports3DSimulation: true,
+    realPhoto: {
+      imageUrl: './boards/msi-b550-tomahawk.jpg',
+      sourceLabel: 'Wikimedia Commons — File:MSI B550 Tomahawk 19354.jpg',
+      sourceUrl: 'https://commons.wikimedia.org/wiki/File:MSI_B550_Tomahawk_19354.jpg',
+      license: 'CC BY-SA 3.0',
+      author: 'Michael Wolf',
+      viewNote:
+        'Ảnh chụp thực tế xoay ngang 90° (tản nhiệt VRM & I/O ở phía trên-phải, khe PCIe bên trái). Dàn DrMOS & cuộn cảm VRM nằm dưới tản nhiệt nhôm khối lớn.',
+    },
+    docsMeta: {
+      schematicStatus: 'block_reference',
+      schematicSourceLabel: 'Sơ đồ khối tham chiếu theo Datasheet IC (RAA229004 / ISL99360 / NCT6687D)',
+      missingDataNote:
+        'Có ảnh chụp thực tế bo mạch (CC BY-SA 3.0), nhưng hãng MSI không công bố Schematic & BoardView gốc (.cad/.tvw). Dữ liệu dây nối chỉ là sơ đồ khối tham chiếu theo datasheet linh kiện.',
+    },
     summary: 'Bo mạch chủ socket AM4 huyền thoại của MSI, trang bị hệ thống cấp nguồn 10+2+1 phase với DrMOS Intersil ISL99360 60A, tản nhiệt Extended Heatsink nhôm khối lớn, quản lý nguồn phụ Richtek RT7291A và Super I/O Nuvoton NCT6687D-M.',
     safetyWarning: 'CHÚ Ý ĐẶC THÙ AM4: Khác với Intel, AMD AM4 có chân pin nằm trên thân CPU (PGA 1331). Khi tháo tản nhiệt CPU dính keo cũ, tuyệt đối không giật thẳng lên làm bật CPU ra khỏi socket làm cong gãy chân PGA!',
     zones: [
@@ -996,35 +1026,40 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         name: 'VRM Cấp Nguồn CPU & SOC (DrMOS 60A)',
         description: 'Dàn cấp nguồn 10 pha VDDCR_CPU và 2 pha VDDCR_SOC dùng DrMOS ISL99360 60A',
         color: '#dc2626',
-        bounds2d: { x: 8, y: 10, w: 26, h: 32 }
+        bounds2d: { x: 8, y: 10, w: 26, h: 32 },
+        photoBounds: { x: 45, y: 2, w: 53, h: 66 }
       },
       {
         id: 'zone-am4-socket',
         name: 'Socket AMD AM4 (PGA 1331)',
         description: 'Đế socket 1331 lỗ tiếp xúc có ngàm khóa cần gạt kim loại',
         color: '#2563eb',
-        bounds2d: { x: 36, y: 12, w: 26, h: 30 }
+        bounds2d: { x: 36, y: 12, w: 26, h: 30 },
+        photoBounds: { x: 54, y: 39, w: 26, h: 25 }
       },
       {
         id: 'zone-ddr4-bank',
         name: '4 Khe DDR4 Boost & Nguồn Bộ Nhớ',
         description: 'Công nghệ DDR4 Boost mạch tín hiệu độc lập, hỗ trợ xung nhịp 4400MHz+ A-XMP',
         color: '#16a34a',
-        bounds2d: { x: 66, y: 10, w: 26, h: 34 }
+        bounds2d: { x: 66, y: 10, w: 26, h: 34 },
+        photoBounds: { x: 42, y: 69, w: 50, h: 29 }
       },
       {
         id: 'zone-amd-b550-pch',
         name: 'Chipset AMD B550 Promontory',
         description: 'Chipset B550 không cần quạt tản nhiệt chủ động, hỗ trợ PCIe 3.0 hạ tầng',
         color: '#9333ea',
-        bounds2d: { x: 64, y: 56, w: 28, h: 32 }
+        bounds2d: { x: 64, y: 56, w: 28, h: 32 },
+        photoBounds: { x: 14, y: 61, w: 26, h: 35 }
       },
       {
         id: 'zone-msi-pcie-m2',
         name: 'Khe PCIe 4.0 Steel Armor & M.2 Shield Frozr',
         description: 'Khe cắm cạc đồ họa bọc thép hàn điểm xuyên mạch chống gãy xé PCB',
         color: '#0891b2',
-        bounds2d: { x: 12, y: 48, w: 46, h: 44 }
+        bounds2d: { x: 12, y: 48, w: 46, h: 44 },
+        photoBounds: { x: 4, y: 2, w: 41, h: 60 }
       }
     ],
     rails: [
@@ -1085,6 +1120,7 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: '1331 pins PGA, ngàm khóa gạt kim loại mạ niken',
         pos3d: { x: 0, y: 0, z: -10, w: 22, d: 24, h: 4, color: '#475569' },
         pos2d: { x: 38, y: 14, w: 22, h: 26 },
+        photoPos: { x: 58.5, y: 41, w: 17.5, h: 20.5 },
         schematicPos: { x: 620, y: 220 },
         pins: [
           { pin: 'VDDCR_CPU', name: 'CORE_VCC', net: 'rail-vddcr-cpu', expectedVoltage: '1.20V', expectedDiodeDrop: '0.015V', expectedResistance: '2.0 Ohm' },
@@ -1130,6 +1166,8 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: '60A Smart Power Stage, QFN-32 package, 5.0V PWM logic',
         pos3d: { x: -26, y: 0, z: -14, w: 5, d: 5, h: 1.1, color: '#0f172a' },
         pos2d: { x: 14, y: 22, w: 5, h: 5 },
+        photoPos: { x: 58, y: 22, w: 9, h: 9 },
+        photoNote: 'Khu vực DrMOS Vcore (che bởi tản nhiệt Extended Heatsink phía trên)',
         schematicPos: { x: 380, y: 180 },
         pins: [
           { pin: 'VIN', name: 'VIN_12V', net: 'rail-msi-12v', expectedVoltage: '12.05V', expectedDiodeDrop: '0.480V', expectedResistance: '> 40 kOhm' },
@@ -1150,6 +1188,8 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: '60A DrMOS, cấp nguồn nhân đồ họa tích hợp',
         pos3d: { x: -26, y: 0, z: -6, w: 5, d: 5, h: 1.1, color: '#0f172a' },
         pos2d: { x: 14, y: 30, w: 5, h: 5 },
+        photoPos: { x: 89, y: 42, w: 8, h: 11 },
+        photoNote: 'Khu vực DrMOS SOC (che bởi tản nhiệt VRM bên phải)',
         schematicPos: { x: 380, y: 260 },
         pins: [
           { pin: 'VIN', name: 'VIN_12V', net: 'rail-msi-12v', expectedVoltage: '12.05V', expectedDiodeDrop: '0.480V' },
@@ -1170,6 +1210,8 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: '0.22uH, dòng bão hòa 60A',
         pos3d: { x: -16, y: 0, z: -14, w: 6, d: 6, h: 5, color: '#334155' },
         pos2d: { x: 22, y: 22, w: 5, h: 5 },
+        photoPos: { x: 69, y: 22, w: 9, h: 9 },
+        photoNote: 'Hàng cuộn cảm R22 nằm ngay dưới tản nhiệt VRM trên, tụ lọc 561 lộ ở viền dưới',
         schematicPos: { x: 480, y: 190 },
         pins: [
           { pin: '1', name: 'SW', net: 'rail-vddcr-cpu', expectedVoltage: '1.20V', expectedDiodeDrop: '0.015V' },
@@ -1190,6 +1232,8 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: 'BGA 7W TDP, hỗ trợ USB 3.2 Gen 2 và 6 cổng SATA',
         pos3d: { x: 26, y: 0, z: 20, w: 14, d: 14, h: 2, color: '#334155' },
         pos2d: { x: 68, y: 64, w: 16, h: 18 },
+        photoPos: { x: 16, y: 64, w: 21, h: 27 },
+        photoNote: 'Chipset B550 nằm dưới khối tản nhiệt nhôm TOMAHAWK',
         schematicPos: { x: 840, y: 460 },
         pins: [
           { pin: '1P05', name: 'VDD_1P05_PCH', net: 'rail-msi-5valw', expectedVoltage: '1.05V', expectedDiodeDrop: '0.280V', expectedResistance: '95 Ohm' },
@@ -1230,6 +1274,8 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: 'QFP-128, MSI Custom Super I/O Firmware',
         pos3d: { x: -36, y: 0, z: 22, w: 9, d: 9, h: 1.5, color: '#18181b' },
         pos2d: { x: 8, y: 68, w: 9, h: 9 },
+        photoPos: { x: 22.8, y: 4.2, w: 5.5, h: 6.5 },
+        photoNote: 'IC Nuvoton NCT6687D lộ rõ trực tiếp trên mặt mạch góc trên-trái',
         schematicPos: { x: 120, y: 480 },
         pins: [
           { pin: '3VSB', name: 'VCC_3VSB', net: 'rail-msi-5valw', expectedVoltage: '3.30V', expectedDiodeDrop: '0.480V' },
@@ -1250,6 +1296,7 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: '24-Pin Standard ATX Socket',
         pos3d: { x: 44, y: 0, z: -10, w: 8, d: 26, h: 10, color: '#09090b' },
         pos2d: { x: 92, y: 14, w: 6, h: 28 },
+        photoPos: { x: 56, y: 90.5, w: 16.5, h: 6.5 },
         schematicPos: { x: 80, y: 120 },
         pins: [
           { pin: '9', name: '5VSB', net: 'rail-msi-5valw', expectedVoltage: '5.05V', expectedDiodeDrop: '0.510V' },
@@ -1270,6 +1317,7 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: '8+4 Pin 12V EPS Connector',
         pos3d: { x: -38, y: 0, z: -32, w: 10, d: 14, h: 9, color: '#09090b' },
         pos2d: { x: 8, y: 4, w: 12, h: 8 },
+        photoPos: { x: 90.5, y: 24, w: 6, h: 7 },
         schematicPos: { x: 80, y: 240 },
         pins: [
           { pin: '12V', name: '12V_IN', net: 'rail-msi-12v', expectedVoltage: '12.05V', expectedDiodeDrop: '0.480V' }
@@ -1289,6 +1337,7 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: '288 Pins DDR4 DIMM',
         pos3d: { x: 20, y: 0, z: -10, w: 4, d: 34, h: 7, color: '#09090b' },
         pos2d: { x: 74, y: 12, w: 4, h: 32 },
+        photoPos: { x: 44.5, y: 76.2, w: 43.5, h: 2.8 },
         schematicPos: { x: 780, y: 140 },
         pins: [
           { pin: 'VDD', name: '1V2_RAM', net: 'rail-vddcr-soc', expectedVoltage: '1.20V', expectedDiodeDrop: '0.360V' }
@@ -1308,6 +1357,7 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
         specs: 'PCIe 4.0 x16, bọc giáp thép chịu lực gắn qua lỗ xuyên PCB',
         pos3d: { x: -8, y: 0, z: 12, w: 38, d: 4, h: 6, color: '#94a3b8' },
         pos2d: { x: 18, y: 56, w: 42, h: 4 },
+        photoPos: { x: 36.2, y: 21.5, w: 4.2, h: 37.5 },
         schematicPos: { x: 740, y: 620 },
         pins: [
           { pin: '12V', name: '12V_BUS', net: 'rail-msi-12v', expectedVoltage: '12.00V', expectedDiodeDrop: '0.480V' }
@@ -1361,6 +1411,13 @@ export const DESKTOP_MOTHERBOARDS: HardwareBoard[] = [
     pcbColor: '#0a0a0c',
     pcbSize: { width: 75, depth: 68, thickness: 1.6 },
     powerSequenceId: 'seq-intel-legacy-h81',
+    supports3DSimulation: true,
+    docsMeta: {
+      schematicStatus: 'block_reference',
+      schematicSourceLabel: 'Sơ đồ khối tham chiếu theo Datasheet IC (ISL95812 / NCT6776D / DH82H81)',
+      missingDataNote:
+        'Chưa có ảnh chụp thực tế bản quyền mở cho ASRock H81M-DGS nên phần Ảnh Thực Tế được để trống; Sơ đồ nguyên lý mô tả trình tự nguồn tham chiếu dựa trên nền tảng Intel Lynx Point H81.',
+    },
     summary: 'Bo mạch chủ socket LGA1150 kinh điển trong các phòng net và máy văn phòng Việt Nam. Sử dụng dàn nguồn VRM 3 pha điều khiển bởi IC Intersil ISL95812, chipset DH82H81 Lynx Point, Super I/O Nuvoton NCT6776D, chip âm thanh/LAN Realtek và khối dao động thạch anh RTC 32.768kHz.',
     safetyWarning: 'BỆNH KINH ĐIỂN DÒNG H81: Mất nguồn 3V Pin CMOS CR2032 hoặc chết thạch anh 32.768kHz sẽ khiến mạch RTC tê liệt làm bo mạch hoàn toàn không kích được nguồn! Luôn kiểm tra pin CMOS và trở bẹ trước tiên.',
     zones: [

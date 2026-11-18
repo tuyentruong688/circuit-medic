@@ -1,5 +1,29 @@
-export type DeviceCategory = 'motherboard' | 'psu';
+export type DeviceCategory = 'motherboard' | 'psu' | 'gpu' | 'sbc_mcu';
 export type ViewMode = 'dashboard' | 'scanner' | 'schematic' | 'viewer3d' | 'boardview' | 'workbench' | 'diagnostics' | 'library';
+export type UiTheme = 'slate' | 'light';
+
+export type SchematicStatus =
+  | 'official_full'
+  | 'official_partial'
+  | 'public_reference'
+  | 'block_reference'
+  | 'unavailable';
+
+export interface BoardRealPhoto {
+  imageUrl: string;
+  sourceLabel: string;
+  sourceUrl: string;
+  license: string;
+  author?: string;
+  viewNote: string;
+}
+
+export interface BoardDocumentationMeta {
+  schematicStatus: SchematicStatus;
+  schematicSourceLabel: string;
+  schematicSourceUrl?: string;
+  missingDataNote?: string;
+}
 
 export type ComponentKind =
   | 'cpu_socket' | 'chipset' | 'mosfet' | 'drmos' | 'pwm_ic' | 'inductor'
@@ -27,6 +51,8 @@ export interface BoardComponent {
   specs?: string;
   pos3d: { x: number; y: number; z: number; w: number; d: number; h: number; rotationY?: number; color?: string };
   pos2d: { x: number; y: number; w: number; h: number };
+  photoPos?: { x: number; y: number; w: number; h: number };
+  photoNote?: string;
   schematicPos: { x: number; y: number };
   pins: PinMeasurement[];
   commonFailureModes: string[];
@@ -61,6 +87,7 @@ export interface BoardZone {
   description: string;
   color: string;
   bounds2d: { x: number; y: number; w: number; h: number };
+  photoBounds?: { x: number; y: number; w: number; h: number };
 }
 
 export interface HardwareBoard {
@@ -74,6 +101,9 @@ export interface HardwareBoard {
   pcbSize: { width: number; depth: number; thickness: number };
   summary: string;
   safetyWarning?: string;
+  realPhoto?: BoardRealPhoto;
+  docsMeta?: BoardDocumentationMeta;
+  supports3DSimulation?: boolean;
   zones: BoardZone[];
   rails: PowerRailNet[];
   components: BoardComponent[];
@@ -98,7 +128,7 @@ export interface DiagnosticStep {
 
 export interface FaultCase {
   id: string;
-  boardId: string | 'all_motherboards' | 'all_psu';
+  boardId: string | 'all_motherboards' | 'all_psu' | 'all_gpu' | 'all_sbc_mcu';
   category: DeviceCategory;
   brandTag: string;
   title: string;
@@ -147,4 +177,7 @@ export interface ModuleSharedProps {
   onNavigateMode: (mode: ViewMode) => void;
   faults: FaultCase[];
   powerSequences: PowerSequenceSpec[];
+  uiTheme?: UiTheme;
+  onToggleUiTheme?: () => void;
+  embedded?: boolean;
 }

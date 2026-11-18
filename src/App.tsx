@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ALL_BOARDS, ALL_FAULTS, POWER_SEQUENCES } from './data/registry';
-import { FaultCase, ModuleSharedProps, ViewMode } from './types/circuit';
+import { ALL_BOARDS, ALL_FAULTS, POWER_SEQUENCES, isFaultForBoard } from './data/registry';
+import { FaultCase, ModuleSharedProps, UiTheme, ViewMode } from './types/circuit';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { DashboardHome } from './components/DashboardHome';
@@ -36,6 +36,26 @@ export function App() {
   const [thermalMode, setThermalMode] = useState<boolean>(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
+  const [uiTheme, setUiTheme] = useState<UiTheme>(() => {
+    try {
+      const saved = localStorage.getItem('cm_ui_theme');
+      return saved === 'light' ? 'light' : 'slate';
+    } catch {
+      return 'slate';
+    }
+  });
+
+  const handleToggleUiTheme = useCallback(() => {
+    setUiTheme((prev) => {
+      const next: UiTheme = prev === 'slate' ? 'light' : 'slate';
+      try {
+        localStorage.setItem('cm_ui_theme', next);
+      } catch {
+        // Ignore storage restrictions
+      }
+      return next;
+    });
+  }, []);
 
   const selectedBoard = useMemo(
     () => ALL_BOARDS.find((b) => b.id === selectedBoardId) ?? ALL_BOARDS[0],
@@ -61,10 +81,7 @@ export function App() {
       setSelectedNetId(null);
       setActiveFault((prev) => {
         if (!prev) return null;
-        if (prev.boardId === boardId) return prev;
-        if (nextBoard.category === 'motherboard' && prev.boardId === 'all_motherboards') return prev;
-        if (nextBoard.category === 'psu' && prev.boardId === 'all_psu') return prev;
-        return null;
+        return isFaultForBoard(prev, nextBoard) ? prev : null;
       });
     },
     []
@@ -160,12 +177,17 @@ export function App() {
     onNavigateMode: handleNavigateMode,
     faults: ALL_FAULTS,
     powerSequences: POWER_SEQUENCES,
+    uiTheme,
+    onToggleUiTheme: handleToggleUiTheme,
   };
 
   const showInspector = Boolean(selectedComponent || selectedNet);
 
   return (
-    <div className="lab-grid-bg flex h-screen w-screen overflow-hidden text-slate-100">
+    <div
+      data-theme={uiTheme}
+      className="lab-grid-bg flex h-screen w-screen overflow-hidden text-slate-100"
+    >
       {/* Left Navigation Sidebar */}
       <Sidebar
         activeMode={activeMode}
@@ -192,6 +214,8 @@ export function App() {
           activeMode={activeMode}
           onNavigateMode={handleNavigateMode}
           onOpenSearch={() => setSearchOpen(true)}
+          uiTheme={uiTheme}
+          onToggleUiTheme={handleToggleUiTheme}
         />
 
         {/* Workspace + Slide-out Cross-Probe Inspector */}

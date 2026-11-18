@@ -29,6 +29,8 @@ import {
   Zap,
 } from 'lucide-react';
 import type { FaultCase, HardwareBoard, ModuleSharedProps } from '../../types/circuit';
+import { DEVICE_CATEGORY_META } from '../../components/circuitLabels';
+import { isFaultForBoard } from '../../data/registry';
 import { SCAN_PRESETS } from './presetGenerator';
 import type {
   DetectedAnomaly,
@@ -209,6 +211,23 @@ export const BoardScannerModule: React.FC<ModuleSharedProps> = ({
     void executeScan(generated, preset.defaultHintText, preset.targetBoardId);
   };
 
+  const realPhotoBoards = useMemo(
+    () => boards.filter((b) => Boolean(b.realPhoto?.imageUrl)),
+    [boards]
+  );
+
+  const handleSelectRealPhotoBoard = (board: HardwareBoard) => {
+    if (!board.realPhoto?.imageUrl) return;
+    stopCamera();
+    const hint = `${board.name} ${board.brand} ${board.generation}`;
+    setActivePresetId(`real-${board.id}`);
+    setImageUrl(board.realPhoto.imageUrl);
+    setImageLabel(`Ảnh thực tế: ${board.name}`);
+    setHintText(hint);
+    setTargetPresetBoardId(board.id);
+    void executeScan(board.realPhoto.imageUrl, hint, board.id);
+  };
+
   const handleFileAccepted = (file: File) => {
     if (!file.type.startsWith('image/')) {
       setScanError('Vui lòng chọn tệp hình ảnh hợp lệ (JPG, PNG, WEBP).');
@@ -298,8 +317,8 @@ export const BoardScannerModule: React.FC<ModuleSharedProps> = ({
   const primarySuggestedFault: FaultCase | null = useMemo(() => {
     if (!scanResult) return null;
     if (scanResult.suggestedFaults.length > 0) return scanResult.suggestedFaults[0];
-    return faults.find((f) => f.category === activeTargetBoard.category) ?? null;
-  }, [activeTargetBoard.category, faults, scanResult]);
+    return faults.find((f) => isFaultForBoard(f, activeTargetBoard)) ?? null;
+  }, [activeTargetBoard, faults, scanResult]);
 
   const handleOpenBoardInMode = (mode: 'viewer3d' | 'schematic' | 'boardview') => {
     onSelectBoard(activeTargetBoard.id);
@@ -500,53 +519,103 @@ export const BoardScannerModule: React.FC<ModuleSharedProps> = ({
             {/* Mode Content Area */}
             <div className="mt-3">
               {inputMode === 'preset' && (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {SCAN_PRESETS.map((preset) => {
-                    const isActive = activePresetId === preset.id;
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => handleSelectPreset(preset)}
-                        className={`group flex flex-col justify-between rounded-xl border p-2.5 text-left transition ${
-                          isActive
-                            ? 'border-cyan-400/70 bg-cyan-500/10'
-                            : 'border-slate-800 bg-slate-950/70 hover:border-slate-600'
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-1">
-                            <span
-                              className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
-                                preset.category === 'psu'
-                                  ? 'bg-amber-500/20 text-amber-300'
-                                  : 'bg-sky-500/20 text-sky-300'
+                <div className="space-y-3">
+                  {realPhotoBoards.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="text-[11px] font-semibold text-emerald-300 flex items-center gap-1.5">
+                        <ImagePlus className="h-3.5 w-3.5" />
+                        <span>Quét Thử Trên Ảnh Chụp Thực Tế ({realPhotoBoards.length} Bo Mạch)</span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {realPhotoBoards.map((board) => {
+                          const realId = `real-${board.id}`;
+                          const isActive = activePresetId === realId;
+                          const catMeta = DEVICE_CATEGORY_META[board.category];
+                          return (
+                            <button
+                              key={realId}
+                              type="button"
+                              onClick={() => handleSelectRealPhotoBoard(board)}
+                              className={`group flex items-center gap-2.5 rounded-xl border p-2 text-left transition ${
+                                isActive
+                                  ? 'border-emerald-400/70 bg-emerald-500/10'
+                                  : 'border-slate-800 bg-slate-950/70 hover:border-slate-600'
                               }`}
                             >
-                              {preset.category === 'psu' ? 'PSU ATX' : 'Mainboard'}
-                            </span>
-                            <span
-                              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                                preset.severityBadge === 'critical'
-                                  ? 'bg-rose-500/20 text-rose-300'
-                                  : preset.severityBadge === 'warning'
-                                  ? 'bg-amber-500/20 text-amber-300'
-                                  : 'bg-emerald-500/20 text-emerald-300'
-                              }`}
-                            >
-                              {preset.defectTag}
-                            </span>
-                          </div>
-                          <div className="mt-1.5 text-xs font-semibold text-slate-100 line-clamp-2 group-hover:text-cyan-300">
-                            {preset.title}
-                          </div>
-                        </div>
-                        <div className="mt-1 text-[11px] text-slate-400 line-clamp-2">
-                          {preset.subtitle}
-                        </div>
-                      </button>
-                    );
-                  })}
+                              <img
+                                src={board.realPhoto!.imageUrl}
+                                alt={board.name}
+                                className="h-12 w-16 shrink-0 rounded-md object-cover border border-slate-800"
+                              />
+                              <div className="min-w-0">
+                                <span
+                                  className={`inline-block rounded border px-1.5 py-0.2 text-[9px] font-bold uppercase ${catMeta.badgeClass}`}
+                                >
+                                  {catMeta.shortLabel}
+                                </span>
+                                <div className="mt-0.5 text-xs font-semibold text-slate-100 truncate group-hover:text-emerald-300">
+                                  {board.name}
+                                </div>
+                                <div className="text-[10px] text-slate-400 truncate">
+                                  {board.realPhoto!.license}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <div className="text-[11px] font-semibold text-amber-300">
+                      Mẫu Mô Phỏng Lỗi Vật Lý (Cháy Sém / Phù Tụ / Oxy Hóa)
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {SCAN_PRESETS.map((preset) => {
+                        const isActive = activePresetId === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => handleSelectPreset(preset)}
+                            className={`group flex flex-col justify-between rounded-xl border p-2.5 text-left transition ${
+                              isActive
+                                ? 'border-cyan-400/70 bg-cyan-500/10'
+                                : 'border-slate-800 bg-slate-950/70 hover:border-slate-600'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1">
+                                <span
+                                  className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase ${DEVICE_CATEGORY_META[preset.category].badgeClass}`}
+                                >
+                                  {DEVICE_CATEGORY_META[preset.category].shortLabel}
+                                </span>
+                                <span
+                                  className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                                    preset.severityBadge === 'critical'
+                                      ? 'bg-rose-500/20 text-rose-300'
+                                      : preset.severityBadge === 'warning'
+                                      ? 'bg-amber-500/20 text-amber-300'
+                                      : 'bg-emerald-500/20 text-emerald-300'
+                                  }`}
+                                >
+                                  {preset.defectTag}
+                                </span>
+                              </div>
+                              <div className="mt-1.5 text-xs font-semibold text-slate-100 line-clamp-2 group-hover:text-cyan-300">
+                                {preset.title}
+                              </div>
+                            </div>
+                            <div className="mt-1 text-[11px] text-slate-400 line-clamp-2">
+                              {preset.subtitle}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -888,11 +957,7 @@ export const BoardScannerModule: React.FC<ModuleSharedProps> = ({
                   <div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span
-                        className={`rounded-md px-2 py-0.5 text-[11px] font-bold ${
-                          scanResult.detectedCategory === 'psu'
-                            ? 'bg-amber-500/20 text-amber-300'
-                            : 'bg-cyan-500/20 text-cyan-300'
-                        }`}
+                        className={`rounded-md border px-2 py-0.5 text-[11px] font-bold ${DEVICE_CATEGORY_META[scanResult.detectedCategory].badgeClass}`}
                       >
                         {scanResult.categoryLabel}
                       </span>
@@ -982,16 +1047,18 @@ export const BoardScannerModule: React.FC<ModuleSharedProps> = ({
                   </div>
                 </div>
 
-                {/* 4 Actionable Handoff Buttons */}
+                {/* Actionable Handoff Buttons */}
                 <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenBoardInMode('viewer3d')}
-                    className="flex items-center justify-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/15 px-3 py-2.5 text-xs font-bold text-cyan-200 hover:bg-cyan-500/25 transition"
-                  >
-                    <Box className="h-4 w-4 text-cyan-400" />
-                    Mở Sơ Đồ 3D Mạch Tương Ứng
-                  </button>
+                  {activeTargetBoard.supports3DSimulation !== false && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenBoardInMode('viewer3d')}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/15 px-3 py-2.5 text-xs font-bold text-cyan-200 hover:bg-cyan-500/25 transition"
+                    >
+                      <Box className="h-4 w-4 text-cyan-400" />
+                      Mở Sơ Đồ 3D Mạch Tương Ứng
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => handleOpenBoardInMode('schematic')}

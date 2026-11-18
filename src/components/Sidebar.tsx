@@ -18,7 +18,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { HardwareBoard, ViewMode } from '../types/circuit';
-import { VIEW_MODE_META } from './circuitLabels';
+import { DEVICE_CATEGORY_META, SCHEMATIC_STATUS_META, VIEW_MODE_META } from './circuitLabels';
 
 interface SidebarProps {
   activeMode: ViewMode;
@@ -51,11 +51,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   hasSelection,
 }) => {
   const isPsu = selectedBoard.category === 'psu';
+  const catMeta = DEVICE_CATEGORY_META[selectedBoard.category];
+  const schMeta = selectedBoard.docsMeta
+    ? SCHEMATIC_STATUS_META[selectedBoard.docsMeta.schematicStatus]
+    : null;
 
   return (
     <aside
-      className={`relative z-30 flex h-full shrink-0 flex-col border-r border-cyan-500/15 bg-[#090F1A]/95 backdrop-blur-xl transition-all duration-200 ${
-        collapsed ? 'w-[72px]' : 'w-[252px]'
+      className={`cm-shell-aside relative z-30 flex h-full shrink-0 flex-col border-r border-slate-800 bg-[#141d2e]/95 backdrop-blur-xl transition-all duration-200 ${
+        collapsed ? 'w-[72px]' : 'w-[244px]'
       }`}
     >
       {/* Brand Header */}
@@ -151,16 +155,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-2.5 space-y-2">
             <div className="flex items-center justify-between gap-2">
               <span
-                className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold ${
-                  isPsu
-                    ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                    : 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                }`}
+                className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold ${catMeta.badgeClass}`}
               >
                 {isPsu ? <Zap className="h-3 w-3" /> : <Cpu className="h-3 w-3" />}
-                {isPsu ? 'NGUỒN ATX' : 'MAINBOARD'}
+                {catMeta.shortLabel}
               </span>
-              <span className="font-mono text-[10px] text-slate-400">{selectedBoard.formFactor}</span>
+              <span className="font-mono text-[10px] text-slate-400 truncate max-w-[100px]">
+                {selectedBoard.formFactor}
+              </span>
             </div>
 
             <div>
@@ -170,6 +172,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="truncate text-[11px] text-slate-400">
                 {selectedBoard.brand} • {selectedBoard.generation}
               </div>
+            </div>
+
+            {/* Honest data availability strip */}
+            <div className="flex flex-wrap gap-1 pt-0.5">
+              <span
+                className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${
+                  selectedBoard.realPhoto
+                    ? 'border-emerald-500/35 bg-emerald-500/15 text-emerald-300'
+                    : 'border-slate-700 bg-slate-800 text-slate-400'
+                }`}
+              >
+                {selectedBoard.realPhoto ? '📷 Ảnh thật' : '📷 Trống ảnh'}
+              </span>
+              {schMeta && (
+                <span className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${schMeta.badgeClass}`}>
+                  {schMeta.shortLabel}
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-1 pt-1 text-center font-mono text-[10px]">

@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   Box,
+  ClipboardEdit,
   Cpu,
   Flame,
   GitBranch,
   Layers,
+  MapPin,
   Stethoscope,
   Thermometer,
   Wrench,
@@ -19,6 +21,7 @@ import {
   PowerRailNet,
   ViewMode,
 } from '../types/circuit';
+import { isFaultForBoard } from '../data/registry';
 import { COMPONENT_KIND_LABELS, RAIL_CATEGORY_LABELS } from './circuitLabels';
 
 interface InspectorDrawerProps {
@@ -46,16 +49,30 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({
   onSelectFault,
   onNavigateMode,
 }) => {
+  const [repairNote, setRepairNote] = useState<string>('');
+
+  useEffect(() => {
+    try {
+      setRepairNote(localStorage.getItem(`cm_notes_${selectedBoard.id}`) ?? '');
+    } catch {
+      setRepairNote('');
+    }
+  }, [selectedBoard.id]);
+
+  const handleNoteChange = (nextVal: string) => {
+    setRepairNote(nextVal);
+    try {
+      localStorage.setItem(`cm_notes_${selectedBoard.id}`, nextVal);
+    } catch {
+      // Ignore storage error
+    }
+  };
+
   if (!selectedComponent && !selectedNet) {
     return null;
   }
 
-  const boardScopedFaults = faults.filter(
-    (f) =>
-      f.boardId === selectedBoard.id ||
-      (selectedBoard.category === 'motherboard' && f.boardId === 'all_motherboards') ||
-      (selectedBoard.category === 'psu' && f.boardId === 'all_psu')
-  );
+  const boardScopedFaults = faults.filter((f) => isFaultForBoard(f, selectedBoard));
 
   const relatedFaults = selectedComponent
     ? boardScopedFaults.filter(
@@ -80,7 +97,7 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({
     : undefined;
 
   return (
-    <aside className="z-20 flex h-full w-full sm:w-[370px] lg:w-[400px] shrink-0 flex-col border-l border-cyan-500/20 bg-[#0A111E]/96 backdrop-blur-xl shadow-2xl">
+    <aside className="cm-shell-aside z-20 flex h-full w-full sm:w-[330px] lg:w-[350px] shrink-0 flex-col border-l border-slate-700/80 bg-[#141d2e]/96 backdrop-blur-xl shadow-2xl">
       {/* Header */}
       <div className="flex items-start justify-between gap-2 border-b border-cyan-500/15 px-4 py-3">
         <div className="min-w-0">
@@ -128,14 +145,16 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({
           <>
             {/* Quick Cross-Probe Jump Buttons */}
             <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => onNavigateMode('viewer3d')}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-2 text-[11px] font-semibold text-cyan-200 hover:bg-cyan-500/20 transition-colors"
-              >
-                <Box className="h-3.5 w-3.5" />
-                <span>Xem trên 3D</span>
-              </button>
+              {selectedBoard.supports3DSimulation !== false && (
+                <button
+                  type="button"
+                  onClick={() => onNavigateMode('viewer3d')}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-2 text-[11px] font-semibold text-cyan-200 hover:bg-cyan-500/20 transition-colors"
+                >
+                  <Box className="h-3.5 w-3.5" />
+                  <span>Xem trên 3D</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => onNavigateMode('schematic')}
@@ -150,7 +169,7 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-2.5 py-2 text-[11px] font-semibold text-violet-200 hover:bg-violet-500/20 transition-colors"
               >
                 <Layers className="h-3.5 w-3.5" />
-                <span>Ảnh Chụp BoardView</span>
+                <span>{selectedBoard.realPhoto ? 'Ảnh Thực Tế' : 'BoardView 2D'}</span>
               </button>
               <button
                 type="button"
@@ -170,6 +189,12 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({
             {/* Summary & Thermal Metrics */}
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3 space-y-2.5">
               <p className="text-xs text-slate-300 leading-relaxed">{selectedComponent.description}</p>
+              {selectedComponent.photoNote && (
+                <div className="flex items-start gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-200">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-amber-400 mt-0.5" />
+                  <span>{selectedComponent.photoNote}</span>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-2 text-[11px] font-mono">
                 {componentZone && (
@@ -399,6 +424,24 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({
             </div>
           </div>
         )}
+
+        {/* Technician Bench Notes (Persisted per board in localStorage) */}
+        <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+          <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300">
+            <ClipboardEdit className="h-3.5 w-3.5 text-cyan-400" />
+            Ghi Chú Đo Đạc Thực Tế
+          </h4>
+          <textarea
+            value={repairNote}
+            onChange={(e) => handleNoteChange(e.target.value)}
+            rows={3}
+            placeholder={`Ghi lại thông số đo thực tế trên ${selectedBoard.name} (VD: U1 Pin2 = 4.98V, Diode 0.42V...)`}
+            className="w-full rounded-lg border border-slate-700/80 bg-slate-900/80 p-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+          />
+          <div className="text-[10px] text-slate-500">
+            Tự động lưu cục bộ trên trình duyệt theo từng bo mạch.
+          </div>
+        </div>
       </div>
     </aside>
   );

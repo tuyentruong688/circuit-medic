@@ -530,5 +530,131 @@ export const POWER_SEQUENCES: PowerSequenceSpec[] = [
         failureSymptom: 'Các đường nguồn đo đủ nhưng dây xám vẫn 0V do rỉ tụ trễ PG (thường là tụ 1uF-10uF/50V nối mass) hoặc chết transistor xuất áp PG.'
       }
     ]
+  },
+
+  // =========================================================================
+  // 6. ARDUINO UNO REV3 POWER & BOOT SEQUENCE
+  // =========================================================================
+  {
+    id: 'seq-arduino-uno-r3',
+    title: 'Trình Tự Cấp Nguồn & Tự Chọn Ngõ Vào Arduino Uno Rev3',
+    category: 'sbc_mcu',
+    platform: 'Arduino Uno Rev3 (ATmega328P + ATmega16U2 + LMV358 + FDN340P)',
+    stages: [
+      {
+        order: 1,
+        signalName: 'PWRIN / VIN Input & Auto-Select Comparator',
+        source: 'Jack DC X1 (7-12V) qua Diode D1 (M7) hoặc Cổng USB1 qua Polyfuse F1',
+        destination: 'U1 (NCP1117ST50T3G) và Op-Amp so sánh U5A (LMV358 chân 3)',
+        voltage: 'VIN ~6.3V-11.3V | USBVCC ~5.0V',
+        delayMs: '0ms',
+        description: 'Nếu có nguồn ngoài VIN >= 6.6V, điểm chia áp VIN/2 (>3.3V) đẩy ngõ ra U5A lên mức cao 5V để khóa MOSFET P-kênh T1, ngắt hoàn toàn nguồn USB chống xung đột.',
+        failureSymptom: 'Chết LMV358 hoặc chập T1 khiến nguồn VIN chảy ngược ra cổng USB máy tính hoặc không nhận nguồn khi rút giắc DC.'
+      },
+      {
+        order: 2,
+        signalName: '+5V & +3V3 Linear Regulation',
+        source: 'U1 (NCP1117ST50T3G) hoặc MOSFET T1 -> IC ổn áp U2 (LP2985-33DBVR)',
+        destination: 'Rail +5V (ATmega328P, ATmega16U2) và Rail +3V3 (Chân 2 tham chiếu U5A)',
+        voltage: '+5.00V & +3.30V',
+        delayMs: '1 - 3ms',
+        description: 'U1 ổn áp tuyến tính ra +5V; ngay sau đó U2 hạ áp từ +5V tạo +3.30V cấp nguồn tham chiếu chính xác cho tầng so sánh U5A.',
+        failureSymptom: 'Mất 3.3V hoặc 5V do chết NCP1117/LP2985, hoặc cầu chì F1 nóng rực tự ngắt vì ngắn mạch 5V.'
+      },
+      {
+        order: 3,
+        signalName: '16MHz Clock & Auto-Reset DTR Pulse',
+        source: 'Thạch anh Y1 (16MHz) & Chân DTR của U3 (ATmega16U2) qua tụ C5 100nF',
+        destination: 'Chân XTAL1/2 và chân RESET# (Pin 1) của ZU4 (ATmega328P)',
+        voltage: '5.0V Logic + Xung Reset 0V',
+        delayMs: '5 - 65ms',
+        description: 'Dao động thạch anh 16MHz ổn định; khi mở Serial/nạp sketch, chân DTR kéo xung thấp qua tụ 100nF kích hoạt Bootloader Optiboot trong 0.5 giây.',
+        failureSymptom: 'Lỗi "avrdude: stk500_getsync(): not in sync" do mất dao động Y1, đứt tụ C5 hoặc mất Bootloader trên ATmega328P.'
+      }
+    ]
+  },
+
+  // =========================================================================
+  // 7. RASPBERRY PI PICO RP2040 POWER SEQUENCE (Official Appendix B)
+  // =========================================================================
+  {
+    id: 'seq-rpi-pico-rp2040',
+    title: 'Trình Tự Nguồn Buck-Boost & Khởi Động RP2040 (Raspberry Pi Pico)',
+    category: 'sbc_mcu',
+    platform: 'Raspberry Pi Pico (RT6150B-33GQW + RP2040 + W25Q16JV)',
+    stages: [
+      {
+        order: 1,
+        signalName: 'VBUS -> Schottky ORing -> VSYS',
+        source: 'Cổng Micro-USB J1 (5.0V VBUS) qua Diode Schottky D1 (MBR120VLSFT1G)',
+        destination: 'Đường nguồn hệ thống VSYS (Chân 39 & chân VIN của U2)',
+        voltage: 'VSYS ~4.70V',
+        delayMs: '0ms',
+        description: 'Diode D1 có sụt áp thuận thấp (~0.3V) cấp điện cho VSYS đồng thời ngăn dòng điện từ pin ngoài chảy ngược vào cổng USB máy tính.',
+        failureSymptom: 'Có 5V tại cổng USB J1 nhưng mất áp tại VSYS do đứt D1.'
+      },
+      {
+        order: 2,
+        signalName: 'RT6150B Buck-Boost 3V3 & RP2040 Internal 1V1 LDO',
+        source: 'U2 (RT6150B-33GQW) + cuộn cảm L1 2.2uH -> Bộ LDO nội trong RP2040',
+        destination: 'IOVDD (+3.30V) và lõi DVDD (+1.10V)',
+        voltage: '+3.30V & +1.10V',
+        delayMs: '1 - 5ms',
+        description: 'RT6150B giữ chặt +3.30V ngay cả khi VSYS tụt xuống 1.8V; nhận +3.3V, RP2040 tự kích hoạt LDO nội tại chân VREG_VOUT cấp +1.10V cho lõi Cortex-M0+.',
+        failureSymptom: 'Chân 3V3_EN chạm mass hoặc hỏng U2 làm mất 3.3V; nếu có 3.3V nhưng mất 1.1V ở tụ VREG_VOUT là chip RP2040 hỏng.'
+      },
+      {
+        order: 3,
+        signalName: '12MHz XOSC & BOOTSEL QSPI Flash Boot',
+        source: 'Thạch anh Y1 (12.000MHz) & Nút SW1 (BOOTSEL)',
+        destination: 'Bộ nhớ QSPI Flash U3 (W25Q16JVUXIQ)',
+        voltage: '3.3V Logic',
+        delayMs: '5 - 15ms',
+        description: 'RP2040 kiểm tra chân QSPI_SS_N: nếu nhấn SW1 (0V), MCU vào BootROM USB MSC hiện ổ đĩa RPI-RP2; nếu thả (3.3V), MCU đọc code từ U3.',
+        failureSymptom: 'Kẹt nút SW1 hoặc lỗi hàn U3 làm bo mạch luôn vào chế độ RPI-RP2 không chạy chương trình.'
+      }
+    ]
+  },
+
+  // =========================================================================
+  // 8. RASPBERRY PI 4 MODEL B PMIC MxL7704-R4 POWER SEQUENCE
+  // =========================================================================
+  {
+    id: 'seq-rpi4-mxl7704',
+    title: 'Trình Tự Nguồn PMIC MxL7704-R4 (Raspberry Pi 4 Model B)',
+    category: 'sbc_mcu',
+    platform: 'Raspberry Pi 4B (USB-C + TVS D1 + PMIC MxL7704-R4 + BCM2711)',
+    stages: [
+      {
+        order: 1,
+        signalName: 'USB-C Power Delivery & TVS Overvoltage Clamp',
+        source: 'Cổng USB-C J1 (kèm 2 trở CC 5.1kΩ) -> Diode TVS D1 (SMBJ5.0A)',
+        destination: 'Chân VIN của PMIC MxL7704-R4 & Đèn đỏ PWR LED',
+        voltage: '+5.10V DC',
+        delayMs: '0ms',
+        description: 'Nguồn 5.1V từ bộ sạc đi qua bảo vệ quá áp TVS D1 nạp vào đường +5V_IN.',
+        failureSymptom: 'Cắm nhầm nguồn >6V làm D1 tự đánh thủng ngắn mạch 5V xuống GND để bảo vệ PMIC (không sáng đèn PWR).'
+      },
+      {
+        order: 2,
+        signalName: 'PMIC MxL7704 4-Rail Sequenced Startup (+3V3 -> +1V8 -> +1V1 -> VDD_CORE)',
+        source: 'IC PMIC MxL7704-R4 (U3) qua các cuộn cảm L1 (4.7uH), L2 (2.2uH), L3/L4 (0.47uH)',
+        destination: 'BCM2711 SoC, LPDDR4 RAM, VL805 USB 3.0 & GPIO 40-Pin',
+        voltage: '+3.30V -> +1.80V -> +1.10V -> +0.85V Core',
+        delayMs: '2 - 12ms',
+        description: 'Theo firmware OTP mã -R4 trong MxL7704, các kênh Buck mở đúng thứ tự nghiêm ngặt để bảo vệ nhân SoC và LPDDR4.',
+        failureSymptom: 'Đèn đỏ sáng đứng nhưng đèn xanh ACT tắt im: mất 1 trong các đường áp 3.3V / 1.8V / VDD_CORE (thường do chết PMIC sau khi chập chân GPIO).'
+      },
+      {
+        order: 3,
+        signalName: 'Power Good (PG) -> EEPROM & microSD Boot',
+        source: 'Tín hiệu PG nội bộ MxL7704 giải phóng Reset cho SoC BCM2711',
+        destination: 'Chip SPI Boot EEPROM & Khe thẻ microSD',
+        voltage: '3.3V Logic',
+        delayMs: '15 - 80ms',
+        description: 'Khi cả 4 đường Buck đạt chuẩn, BCM2711 đọc bootloader từ SPI EEPROM rồi nạp kernel từ microSD/USB.',
+        failureSymptom: 'Đèn xanh ACT nháy 4 lần lặp lại (lỗi SDRAM/Bootloader) hoặc nháy đều không xuất hình HDMI.'
+      }
+    ]
   }
 ];

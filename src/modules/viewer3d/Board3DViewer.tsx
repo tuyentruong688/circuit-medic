@@ -8,13 +8,16 @@ import {
   Compass,
   Eye,
   Flame,
+  Image as ImageIcon,
   Layers,
   Maximize2,
   RotateCcw,
+  Stethoscope,
   Tag,
   Zap,
 } from 'lucide-react';
 import { BoardComponent, ModuleSharedProps } from '../../types/circuit';
+import { DEVICE_CATEGORY_META } from '../../components/circuitLabels';
 import { buildComponent3D, ComponentBuildResult } from './componentModels';
 import { ResourceTracker } from './disposal';
 import { createPowerFlowSystem } from './powerFlow';
@@ -54,6 +57,7 @@ export const Board3DViewer: React.FC<ModuleSharedProps> = ({
   thermalMode,
   onToggleThermalMode,
   onNavigateMode,
+  embedded = false,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [webglError, setWebglError] = useState<string | null>(null);
@@ -128,8 +132,11 @@ export const Board3DViewer: React.FC<ModuleSharedProps> = ({
 
   // Main Three.js scene lifecycle (rebuilds only when selectedBoard changes)
   useEffect(() => {
+    if (selectedBoard.supports3DSimulation === false) {
+      return undefined;
+    }
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) return undefined;
 
     setWebglError(null);
     setHoveredTooltip(null);
@@ -658,59 +665,203 @@ export const Board3DViewer: React.FC<ModuleSharedProps> = ({
   }, [selectedBoard]);
 
   const firstPinVoltage = selectedComponent?.pins[0]?.expectedVoltage;
+  const categoryMeta = DEVICE_CATEGORY_META[selectedBoard.category];
+
+  if (selectedBoard.supports3DSimulation === false) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center rounded-xl border border-slate-700/70 bg-slate-950/90 p-6 text-center text-slate-100 shadow-xl">
+        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/35 bg-amber-500/10 text-amber-300">
+          <Box className="h-7 w-7" />
+        </div>
+        <h3 className="text-base font-bold text-slate-100">
+          Chưa Có Dữ Liệu Mô Phỏng 3D — {selectedBoard.name}
+        </h3>
+        <p className="mt-2 max-w-lg text-xs leading-relaxed text-slate-400">
+          {selectedBoard.docsMeta?.missingDataNote ||
+            'Chưa có file CAD / BoardView 3D chính thức cho bo mạch này. Ứng dụng để trống phần dựng hình 3D để không mô phỏng sai cấu trúc vật lý.'}
+        </p>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+          {selectedBoard.realPhoto && (
+            <button
+              type="button"
+              onClick={() => onNavigateMode('boardview')}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
+            >
+              <ImageIcon className="h-3.5 w-3.5" />
+              <span>Mở Ảnh Thực Tế PCB</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onNavigateMode('diagnostics')}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-medium text-slate-200 hover:border-cyan-400/50 transition-colors"
+          >
+            <Stethoscope className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Mở Quy Trình Chẩn Đoán</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-full min-h-[460px] bg-slate-950 rounded-xl overflow-hidden border border-cyan-500/20 select-none">
-      {/* Three.js WebGL Mount Container */}
-      <div ref={containerRef} className="w-full h-full" />
-
-      {/* Graceful WebGL Fallback */}
-      {webglError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/95 p-6 text-center z-40">
-          <div className="max-w-md rounded-xl border border-amber-500/40 bg-slate-900/90 p-5 text-slate-200">
-            <AlertTriangle className="w-9 h-9 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-amber-300 mb-1">
-              Không thể khởi tạo 3D WebGL
-            </h3>
-            <p className="text-xs text-slate-300 leading-relaxed">{webglError}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Top-Left HUD: Board & Fault Status */}
-      <div className="absolute top-3 left-3 z-20 flex flex-col gap-2 pointer-events-none max-w-[340px]">
-        <div className="pointer-events-auto rounded-lg bg-slate-900/85 backdrop-blur-md border border-slate-700/80 px-3 py-2 shadow-lg">
-          <div className="flex items-center gap-2">
+    <div className="flex flex-col w-full h-full min-h-[320px] bg-slate-950 rounded-xl overflow-hidden border border-slate-700/70 select-none">
+      {/* Docked Top Controls Bar (Never overlaps the 3D canvas or other HUDs) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 bg-slate-950/95 px-3 py-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 rounded-md border border-slate-800 bg-slate-900/90 px-2 py-1 text-[11px]">
             <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-bold tracking-wide text-cyan-300 uppercase">
-              {selectedBoard.category === 'motherboard'
-                ? 'Mainboard PC 3D'
-                : 'Nguồn ATX 3D'}
-            </span>
-            <span className="ml-auto text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded">
-              {fpsDisplay} FPS
-            </span>
+            <span className="font-bold text-cyan-300">{categoryMeta.shortLabel} 3D</span>
+            <span className="font-mono text-[10px] text-emerald-400">{fpsDisplay} FPS</span>
           </div>
-          <div className="text-sm font-semibold text-slate-100 truncate mt-0.5">
-            {selectedBoard.name}
-          </div>
-          <div className="text-[11px] text-slate-400">
-            {selectedBoard.brand} • {selectedBoard.formFactor} •{' '}
-            {selectedBoard.components.length} linh kiện
+
+          {/* Camera Preset Bar */}
+          <div className="flex items-center gap-0.5 rounded-md border border-slate-800 bg-slate-900/90 p-0.5">
+            <button
+              type="button"
+              onClick={() => cameraApiRef.current?.flyToPreset('iso')}
+              className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-slate-200 hover:bg-cyan-500/20 hover:text-cyan-300 transition"
+              title="Góc nhìn tổng quan Isometric"
+            >
+              <Box className="w-3 h-3" />
+              <span className="hidden sm:inline">Tổng Quan</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => cameraApiRef.current?.flyToPreset('top')}
+              className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-slate-200 hover:bg-cyan-500/20 hover:text-cyan-300 transition"
+              title="Nhìn thẳng từ trên xuống"
+            >
+              <Compass className="w-3 h-3" />
+              <span className="hidden sm:inline">Từ Trên</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => cameraApiRef.current?.flyToPreset('low')}
+              className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-slate-200 hover:bg-cyan-500/20 hover:text-cyan-300 transition"
+              title="Góc thấp ngắm linh kiện"
+            >
+              <Maximize2 className="w-3 h-3" />
+              <span className="hidden sm:inline">Góc Thấp</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onSelectComponent(null);
+                cameraApiRef.current?.flyToPreset('iso');
+              }}
+              className="rounded px-1.5 py-1 text-slate-300 hover:bg-slate-700/70 transition"
+              title="Đặt lại góc camera"
+            >
+              <RotateCcw className="w-3 h-3" />
+            </button>
           </div>
         </div>
 
-        {activeFault && (
-          <div className="pointer-events-auto rounded-lg bg-rose-950/85 backdrop-blur-md border border-rose-500/50 px-3 py-2 shadow-lg">
-            <div className="flex items-center gap-1.5 text-rose-300 text-xs font-bold">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-              <span className="truncate">Đang mô phỏng lỗi: {activeFault.title}</span>
+        {/* Visualization Mode Toggles & Inline Exploded Layer Slider */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-1.5 rounded-md border border-slate-800 bg-slate-900/80 px-2 py-1">
+            <Layers className="w-3 h-3 text-cyan-400 shrink-0" />
+            <span className="hidden xl:inline text-[10px] text-slate-300">Tách lớp</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={explodedPct}
+              onChange={(e) => setExplodedPct(Number(e.target.value))}
+              className="w-16 sm:w-20 accent-cyan-400 cursor-pointer h-1 bg-slate-700 rounded-lg"
+              title="Kéo để tách lớp linh kiện và mạch PCB"
+            />
+            <span className="font-mono text-[10px] text-cyan-300 w-7 text-right">
+              {explodedPct}%
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowPowerFlow((v) => !v)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition ${
+              showPowerFlow
+                ? 'bg-cyan-500/20 border-cyan-400/60 text-cyan-200'
+                : 'bg-slate-900 border-slate-700/80 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Zap className="w-3 h-3" />
+            <span className="hidden md:inline">Dòng Điện</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggleThermalMode}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition ${
+              thermalMode
+                ? 'bg-orange-500/25 border-orange-400/70 text-orange-200'
+                : 'bg-slate-900 border-slate-700/80 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Flame className="w-3 h-3" />
+            <span className="hidden md:inline">Nhiệt IR</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setXrayMode((v) => !v)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition ${
+              xrayMode
+                ? 'bg-violet-500/25 border-violet-400/70 text-violet-200'
+                : 'bg-slate-900 border-slate-700/80 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Eye className="w-3 h-3" />
+            <span className="hidden md:inline">X-Quang</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowLabels((v) => !v)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition ${
+              showLabels
+                ? 'bg-emerald-500/20 border-emerald-400/60 text-emerald-200'
+                : 'bg-slate-900 border-slate-700/80 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Tag className="w-3 h-3" />
+            <span className="hidden sm:inline">Nhãn</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Unobstructed Three.js WebGL Viewport */}
+      <div className="cm-preserve-dark relative flex-1 min-h-0 overflow-hidden bg-[#060b14]">
+        {/* Three.js WebGL Mount Container */}
+        <div ref={containerRef} className="w-full h-full" />
+
+        {/* Graceful WebGL Fallback */}
+        {webglError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-950/95 p-6 text-center z-40">
+            <div className="max-w-md rounded-xl border border-amber-500/40 bg-slate-900/90 p-5 text-slate-200">
+              <AlertTriangle className="w-9 h-9 text-amber-400 mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-amber-300 mb-1">
+                Không thể khởi tạo 3D WebGL
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed">{webglError}</p>
             </div>
-            <div className="text-[11px] text-rose-200/80 mt-1 flex flex-wrap gap-1">
+          </div>
+        )}
+
+        {/* Active Fault Compact Pill (Top-Left only when activeFault is set) */}
+        {activeFault && (
+          <div className="absolute top-2.5 left-2.5 z-20 max-w-[300px] rounded-lg bg-rose-950/90 backdrop-blur-md border border-rose-500/50 px-2.5 py-1.5 shadow-lg">
+            <div className="flex items-center gap-1.5 text-rose-300 text-[11px] font-bold">
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+              <span className="truncate">Lỗi: {activeFault.title}</span>
+            </div>
+            <div className="text-[10px] text-rose-200/85 mt-1 flex flex-wrap gap-1">
               <span>Nghi ngờ:</span>
               {activeFault.suspectComponentIds.map((id) => (
                 <button
                   key={id}
+                  type="button"
                   onClick={() => onSelectComponent(id)}
                   className="px-1.5 py-0.5 rounded bg-rose-500/25 hover:bg-rose-500/45 border border-rose-400/40 text-rose-100 font-mono text-[10px] transition"
                 >
@@ -720,270 +871,143 @@ export const Board3DViewer: React.FC<ModuleSharedProps> = ({
             </div>
           </div>
         )}
-      </div>
 
-      {/* Top-Right HUD: Camera Presets & Visualization Modes */}
-      <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
-        {/* Camera Preset Bar */}
-        <div className="flex items-center gap-1 rounded-lg bg-slate-900/85 backdrop-blur-md border border-slate-700/80 p-1 shadow-lg">
-          <button
-            onClick={() => cameraApiRef.current?.flyToPreset('iso')}
-            className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-slate-200 hover:bg-cyan-500/20 hover:text-cyan-300 transition"
-            title="Góc nhìn tổng quan Isometric"
-          >
-            <Box className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Tổng Quan</span>
-          </button>
-          <button
-            onClick={() => cameraApiRef.current?.flyToPreset('top')}
-            className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-slate-200 hover:bg-cyan-500/20 hover:text-cyan-300 transition"
-            title="Nhìn thẳng từ trên xuống (BoardView 3D)"
-          >
-            <Compass className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Từ Trên</span>
-          </button>
-          <button
-            onClick={() => cameraApiRef.current?.flyToPreset('low')}
-            className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-slate-200 hover:bg-cyan-500/20 hover:text-cyan-300 transition"
-            title="Góc thấp ngắm linh kiện"
-          >
-            <Maximize2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Góc Thấp</span>
-          </button>
-          <button
-            onClick={() => {
-              onSelectComponent(null);
-              cameraApiRef.current?.flyToPreset('iso');
-            }}
-            className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-slate-300 hover:bg-slate-700/70 transition"
-            title="Đặt lại góc camera"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Visualization Mode Toggles */}
-        <div className="flex flex-wrap justify-end gap-1.5">
-          <button
-            onClick={() => setShowPowerFlow((v) => !v)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border backdrop-blur-md transition shadow ${
-              showPowerFlow
-                ? 'bg-cyan-500/20 border-cyan-400/60 text-cyan-200'
-                : 'bg-slate-900/80 border-slate-700/80 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Zap className="w-3.5 h-3.5" />
-            <span>Dòng Điện 3D</span>
-          </button>
-
-          <button
-            onClick={onToggleThermalMode}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border backdrop-blur-md transition shadow ${
-              thermalMode
-                ? 'bg-orange-500/25 border-orange-400/70 text-orange-200'
-                : 'bg-slate-900/80 border-slate-700/80 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Flame className="w-3.5 h-3.5" />
-            <span>Camera Nhiệt IR</span>
-          </button>
-
-          <button
-            onClick={() => setXrayMode((v) => !v)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border backdrop-blur-md transition shadow ${
-              xrayMode
-                ? 'bg-violet-500/25 border-violet-400/70 text-violet-200'
-                : 'bg-slate-900/80 border-slate-700/80 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>X-Quang PCB</span>
-          </button>
-
-          <button
-            onClick={() => setShowLabels((v) => !v)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border backdrop-blur-md transition shadow ${
-              showLabels
-                ? 'bg-emerald-500/20 border-emerald-400/60 text-emerald-200'
-                : 'bg-slate-900/80 border-slate-700/80 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Tag className="w-3.5 h-3.5" />
-            <span>Nhãn</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Bottom-Left HUD: Exploded Layer View Slider + Selected Component Quick Card */}
-      <div className="absolute bottom-3 left-3 z-20 flex flex-col gap-2 max-w-[320px]">
+        {/* Bottom-Left HUD: Selected Component Quick Card (compact, unobtrusive) */}
         {selectedComponent && (
-          <div className="rounded-lg bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 p-3 shadow-xl">
+          <div className="absolute bottom-2.5 left-2.5 z-20 max-w-[280px] rounded-lg bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 p-2.5 shadow-xl">
             <div className="flex items-start justify-between gap-2">
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
                     {selectedComponent.id}
                   </span>
                   {selectedComponent.partNumber && (
-                    <span className="text-[11px] font-mono text-slate-300">
+                    <span className="text-[10px] font-mono text-slate-300 truncate">
                       {selectedComponent.partNumber}
                     </span>
                   )}
                 </div>
-                <div className="text-xs font-semibold text-slate-100 mt-1">
+                <div className="text-xs font-semibold text-slate-100 mt-1 truncate">
                   {selectedComponent.label}
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => onSelectComponent(null)}
-                className="text-[11px] text-slate-400 hover:text-slate-200 px-1.5 py-0.5 rounded bg-slate-800"
+                className="text-[10px] text-slate-400 hover:text-slate-200 px-1.5 py-0.5 rounded bg-slate-800"
               >
                 Đóng
               </button>
             </div>
-            <div className="mt-1.5 text-[11px] text-slate-300 flex flex-wrap gap-x-3 gap-y-1">
-              <span>Khu vực: {selectedComponent.zone}</span>
-              {firstPinVoltage && (
-                <span className="text-emerald-300 font-mono">
-                  Áp: {firstPinVoltage}
-                </span>
-              )}
-            </div>
-            <div className="mt-2 flex items-center gap-1.5">
-              <button
-                onClick={() => onNavigateMode('schematic')}
-                className="flex-1 text-[11px] font-medium px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-500/40 transition"
-              >
-                Sơ Đồ Nguyên Lý
-              </button>
-              <button
-                onClick={() => onNavigateMode('boardview')}
-                className="flex-1 text-[11px] font-medium px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 transition"
-              >
-                BoardView Đo Đạc
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="rounded-lg bg-slate-900/85 backdrop-blur-md border border-slate-700/80 px-3 py-2.5 shadow-lg">
-          <div className="flex items-center justify-between gap-3 mb-1.5">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-200">
-              <Layers className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Tách Lớp PCB</span>
-            </div>
-            <span className="text-[11px] font-mono text-cyan-300">
-              {explodedPct}%
-            </span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={explodedPct}
-            onChange={(e) => setExplodedPct(Number(e.target.value))}
-            className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-slate-700 rounded-lg"
-          />
-          <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-            <button
-              onClick={() => setExplodedPct(0)}
-              className="hover:text-cyan-300 transition"
-            >
-              Gắn khít (0%)
-            </button>
-            <button
-              onClick={() => setExplodedPct(65)}
-              className="hover:text-cyan-300 transition"
-            >
-              Tách chuẩn (65%)
-            </button>
-            <button
-              onClick={() => setExplodedPct(100)}
-              className="hover:text-cyan-300 transition"
-            >
-              Toàn phần (100%)
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom-Right HUD: Thermal Legend OR Interactive Power Rail Filter */}
-      <div className="absolute bottom-3 right-3 z-20 flex flex-col items-end gap-2 max-w-[360px]">
-        {thermalMode && (
-          <div className="rounded-lg bg-slate-900/90 backdrop-blur-md border border-orange-500/40 px-3 py-2.5 shadow-lg w-full">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-orange-300 mb-1.5">
-              <span className="flex items-center gap-1">
-                <Flame className="w-3.5 h-3.5" />
-                Ảnh Nhiệt FLIR IR (°C)
-              </span>
-              <span className="font-mono text-slate-300">24°C — 115°C+</span>
-            </div>
-            <div
-              className="h-2.5 w-full rounded-full border border-slate-700"
-              style={{
-                background:
-                  'linear-gradient(90deg, #0a0b3c 0%, #420a7e 22%, #a61b66 44%, #ef5612 66%, #ffbe1f 85%, #fffee6 100%)',
-              }}
-            />
-            <div className="mt-2 flex flex-wrap gap-1 justify-end">
-              {thermalHotspots.map(({ comp, tempC }) => (
+            {firstPinVoltage && (
+              <div className="mt-1 text-[11px] text-emerald-300 font-mono">
+                Áp chuẩn: {firstPinVoltage}
+              </div>
+            )}
+            {!embedded && (
+              <div className="mt-2 flex items-center gap-1.5">
                 <button
-                  key={comp.id}
-                  onClick={() => onSelectComponent(comp.id)}
-                  className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-[10px] font-mono text-slate-200 transition"
+                  type="button"
+                  onClick={() => onNavigateMode('schematic')}
+                  className="flex-1 text-[10px] font-medium px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-500/40 transition"
                 >
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: tempToCssColor(tempC) }}
-                  />
-                  <span>{comp.id}</span>
-                  <span className="text-orange-300">{tempC}°C</span>
+                  Nguyên Lý
                 </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Power Rail Filter Chips */}
-        <div className="rounded-lg bg-slate-900/85 backdrop-blur-md border border-slate-700/80 px-2.5 py-2 shadow-lg">
-          <div className="flex items-center justify-between gap-2 mb-1.5">
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-300">
-              <Activity className="w-3.5 h-3.5 text-cyan-400" />
-              Lọc Đường Nguồn 3D
-            </span>
-            {selectedNetId && (
-              <button
-                onClick={() => onSelectNet(null)}
-                className="text-[10px] text-cyan-300 hover:underline"
-              >
-                Hiện tất cả
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigateMode('boardview')}
+                  className="flex-1 text-[10px] font-medium px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 transition"
+                >
+                  BoardView
+                </button>
+              </div>
             )}
           </div>
-          <div className="flex flex-wrap gap-1 justify-end max-w-[330px]">
-            {selectedBoard.rails.slice(0, 8).map((rail) => {
-              const active = selectedNetId === rail.id;
-              return (
-                <button
-                  key={rail.id}
-                  onClick={() => onSelectNet(active ? null : rail.id)}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border transition ${
-                    active
-                      ? 'bg-slate-800 text-white border-white/60 shadow'
-                      : 'bg-slate-950/70 text-slate-300 border-slate-700/70 hover:border-slate-500'
-                  }`}
-                >
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: rail.color }}
-                  />
-                  <span>{rail.name}</span>
-                </button>
-              );
-            })}
+        )}
+
+        {/* Bottom-Right HUD: Thermal Legend (only when thermalMode) + Rail Filter (only when !embedded) */}
+        {(thermalMode || !embedded) && (
+          <div className="absolute bottom-2.5 right-2.5 z-20 flex flex-col items-end gap-2 max-w-[330px]">
+            {thermalMode && (
+              <div className="rounded-lg bg-slate-900/90 backdrop-blur-md border border-orange-500/40 px-3 py-2 shadow-lg w-full">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-orange-300 mb-1.5">
+                  <span className="flex items-center gap-1">
+                    <Flame className="w-3.5 h-3.5" />
+                    Ảnh Nhiệt FLIR IR (°C)
+                  </span>
+                  <span className="font-mono text-slate-300">24°C — 115°C+</span>
+                </div>
+                <div
+                  className="h-2 w-full rounded-full border border-slate-700"
+                  style={{
+                    background:
+                      'linear-gradient(90deg, #0a0b3c 0%, #420a7e 22%, #a61b66 44%, #ef5612 66%, #ffbe1f 85%, #fffee6 100%)',
+                  }}
+                />
+                <div className="mt-1.5 flex flex-wrap gap-1 justify-end">
+                  {thermalHotspots.map(({ comp, tempC }) => (
+                    <button
+                      key={comp.id}
+                      type="button"
+                      onClick={() => onSelectComponent(comp.id)}
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-[10px] font-mono text-slate-200 transition"
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: tempToCssColor(tempC) }}
+                      />
+                      <span>{comp.id}</span>
+                      <span className="text-orange-300">{tempC}°C</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!embedded && (
+              <div className="rounded-lg bg-slate-900/85 backdrop-blur-md border border-slate-700/80 px-2.5 py-2 shadow-lg">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-300">
+                    <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                    Lọc Đường Nguồn 3D
+                  </span>
+                  {selectedNetId && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectNet(null)}
+                      className="text-[10px] text-cyan-300 hover:underline"
+                    >
+                      Hiện tất cả
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1 justify-end max-w-[310px]">
+                  {selectedBoard.rails.slice(0, 8).map((rail) => {
+                    const active = selectedNetId === rail.id;
+                    return (
+                      <button
+                        key={rail.id}
+                        type="button"
+                        onClick={() => onSelectNet(active ? null : rail.id)}
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border transition ${
+                          active
+                            ? 'bg-slate-800 text-white border-white/60 shadow'
+                            : 'bg-slate-950/70 text-slate-300 border-slate-700/70 hover:border-slate-500'
+                        }`}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: rail.color }}
+                        />
+                        <span>{rail.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
+        )}
 
       {/* Floating Vietnamese Hover Raycast Tooltip */}
       {hoveredTooltip && (
@@ -1054,6 +1078,7 @@ export const Board3DViewer: React.FC<ModuleSharedProps> = ({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

@@ -35,11 +35,16 @@ import type {
   PowerRailNet,
   ViewMode,
 } from '../../types/circuit';
+import { isFaultForBoard } from '../../data/registry';
+import { DEVICE_CATEGORY_META } from '../../components/circuitLabels';
 import { evaluateLiveMeasurement, type MeasurementEvaluation } from './measurementEvaluator';
 import { POST_CODE_ITEMS, type PostCodeItem } from './postCodeData';
 
 const BRAND_FILTERS = [
   { id: 'all', label: 'Tất cả hãng' },
+  { id: 'Arduino', label: 'Arduino' },
+  { id: 'Raspberry Pi', label: 'Raspberry Pi' },
+  { id: 'NVIDIA', label: 'NVIDIA' },
   { id: 'ASUS', label: 'ASUS' },
   { id: 'Gigabyte', label: 'Gigabyte' },
   { id: 'MSI', label: 'MSI' },
@@ -154,11 +159,7 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
       if (deviceFilter !== 'all' && f.category !== deviceFilter) return false;
       if (severityFilter !== 'all' && f.severity !== severityFilter) return false;
       if (onlyCurrentBoard) {
-        const matchesSpecific = f.boardId === selectedBoard.id;
-        const matchesGeneric =
-          (f.boardId === 'all_motherboards' && selectedBoard.category === 'motherboard') ||
-          (f.boardId === 'all_psu' && selectedBoard.category === 'psu');
-        if (!matchesSpecific && !matchesGeneric) return false;
+        if (!isFaultForBoard(f, selectedBoard)) return false;
       }
       if (brandFilter !== 'all') {
         const brandMatch =
@@ -220,10 +221,7 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
     if (!currentFault) return selectedBoard;
     const exact = boards.find((b) => b.id === currentFault.boardId);
     if (exact) return exact;
-    if (
-      (currentFault.boardId === 'all_motherboards' && selectedBoard.category === 'motherboard') ||
-      (currentFault.boardId === 'all_psu' && selectedBoard.category === 'psu')
-    ) {
+    if (isFaultForBoard(currentFault, selectedBoard)) {
       return selectedBoard;
     }
     return boards.find((b) => b.category === currentFault.category) ?? selectedBoard;
@@ -275,7 +273,10 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
       onSelectBoard(exact.id);
     } else if (
       fault.category !== selectedBoard.category &&
-      (fault.boardId === 'all_motherboards' || fault.boardId === 'all_psu')
+      (fault.boardId === 'all_motherboards' ||
+        fault.boardId === 'all_psu' ||
+        fault.boardId === 'all_gpu' ||
+        fault.boardId === 'all_sbc_mcu')
     ) {
       const firstCatBoard = boards.find((b) => b.category === fault.category);
       if (firstCatBoard) onSelectBoard(firstCatBoard.id);
@@ -490,17 +491,19 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
             </div>
 
             {/* Device Category Tabs */}
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {[
                 { id: 'all', label: 'Tất cả' },
-                { id: 'motherboard', label: 'Mainboard PC' },
-                { id: 'psu', label: 'Nguồn PSU' },
+                { id: 'sbc_mcu', label: DEVICE_CATEGORY_META.sbc_mcu.shortLabel },
+                { id: 'gpu', label: DEVICE_CATEGORY_META.gpu.shortLabel },
+                { id: 'motherboard', label: DEVICE_CATEGORY_META.motherboard.shortLabel },
+                { id: 'psu', label: DEVICE_CATEGORY_META.psu.shortLabel },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setDeviceFilter(tab.id as 'all' | DeviceCategory)}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-medium border transition-colors ${
+                  className={`py-1 px-2.5 rounded-lg text-[11px] font-medium border transition-colors ${
                     deviceFilter === tab.id
                       ? 'bg-cyan-500/20 border-cyan-400/60 text-cyan-200'
                       : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'

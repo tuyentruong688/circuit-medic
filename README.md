@@ -1,6 +1,12 @@
-# CircuitMedic — Trạm Chẩn Đoán & Sửa Chữa Mainboard PC / Nguồn ATX
+# CircuitMedic — Trạm Chẩn Đoán & Sửa Chữa Mainboard PC / VGA / Nguồn ATX / Bo Nhúng
 
-**CircuitMedic** là ứng dụng web tĩnh (100% Static Web App, chạy hoàn toàn trên trình duyệt, không cần backend hay trả phí API) được thiết kế theo phong cách **Hardware Engineering Dark-Lab** dành cho kỹ thuật viên sửa chữa phần cứng máy tính, bo mạch chủ Desktop (Intel/AMD) và bộ nguồn máy tính ATX (PSU).
+**CircuitMedic** là ứng dụng web tĩnh (100% Static Web App, chạy hoàn toàn trên trình duyệt, không cần backend hay trả phí API) được thiết kế với **2 chế độ giao diện Sáng / Tối dịu mắt (Nordic Slate & Daylight Lab)** dành cho kỹ thuật viên sửa chữa phần cứng máy tính, card đồ họa rời, bộ nguồn ATX và bo mạch nhúng Open Hardware.
+
+### Điểm mới trên phiên bản v1.2
+- **12 Bo Mạch Thuộc 4 Phân Loại**: Nhúng & SBC (`Arduino Uno Rev3`, `Raspberry Pi Pico`, `Raspberry Pi 4 Model B`), Card Đồ Họa (`NVIDIA GeForce GTX 1080 Ti Reference PG611`), 4 Mainboard Desktop (`ASUS ROG Strix B760-F`, `Gigabyte B660M DS3H`, `MSI MAG B550 Tomahawk`, `ASRock H81M-DGS`) và 4 Nguồn ATX (`Corsair RM750x`, `Seasonic Focus GX-650`, `Cooler Master MWE 650 V2`, `Nguồn ATX TL494`).
+- **6 Ảnh Thực Tế PCB Xác Thực (Wikimedia Commons)**: Khoanh vùng trực tiếp linh kiện, vẽ đường dò thông mạch Airwire và tích hợp **kính lúp soi mạch 2.5×** trên ảnh chụp thật; hỗ trợ tải ảnh & dán ảnh từ Clipboard (`Ctrl+V`).
+- **Minh Bạch Tư Liệu & Để Trống Trung Thực**: Phân biệt rõ *Schematic chính thức*, *Sơ đồ khối tham chiếu IC*, và tự động **để trống** ảnh chụp / Schematic / mô phỏng 3D khi hãng bảo mật NDA hoặc chưa có nguồn bản quyền mở.
+- **Bố Cục Thoáng & Dịu Mắt**: Sơ đồ nguyên lý hỗ trợ nền **Giấy Trắng PDF**, thanh công cụ 3D neo cố định không che khuất mô hình, Workbench đồng bộ không trùng thanh lọc.
 
 ---
 

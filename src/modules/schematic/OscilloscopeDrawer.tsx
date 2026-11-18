@@ -28,6 +28,7 @@ interface OscilloscopeDrawerProps {
   powerSequence: PowerSequenceSpec | null;
   onSelectNet: (netId: string | null) => void;
   onSelectPin: (pin: PinMeasurement) => void;
+  defaultOpen?: boolean;
 }
 
 type WaveKind = 'pwm_300k' | 'rtc_32k' | 'pg_step' | 'dc_ripple' | 'ac_hv';
@@ -78,8 +79,9 @@ export const OscilloscopeDrawer: React.FC<OscilloscopeDrawerProps> = ({
   powerSequence,
   onSelectNet,
   onSelectPin,
+  defaultOpen = true,
 }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [activeTab, setActiveTab] = useState<'scope' | 'sequence'>('scope');
   const [isRunning, setIsRunning] = useState(true);
   const [simulateFaultWave, setSimulateFaultWave] = useState(true);
@@ -372,7 +374,7 @@ export const OscilloscopeDrawer: React.FC<OscilloscopeDrawerProps> = ({
           {activeTab === 'scope' ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
               {/* CRT Oscilloscope Canvas */}
-              <div className="lg:col-span-7 flex flex-col rounded-lg border border-slate-800 bg-[#040a12] overflow-hidden">
+              <div className="cm-preserve-dark lg:col-span-7 flex flex-col rounded-lg border border-slate-800 bg-[#040a12] overflow-hidden">
                 <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/80 border-b border-slate-800 text-[11px]">
                   <div className="flex items-center gap-2">
                     <span

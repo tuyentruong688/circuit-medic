@@ -1,4 +1,5 @@
 import type { FaultCase, HardwareBoard, PowerSequenceSpec } from '../../types/circuit';
+import { DEVICE_CATEGORY_META } from '../../components/circuitLabels';
 
 function triggerDownload(filename: string, content: string, mimeType: string): void {
   const blob = new Blob([content], { type: mimeType });
@@ -42,7 +43,7 @@ export function exportBoardAsMarkdown(
   lines.push('');
   lines.push(`- **Hãng:** ${board.brand}`);
   lines.push(
-    `- **Phân loại:** ${board.category === 'motherboard' ? 'Mainboard Máy Tính PC' : 'Nguồn Máy Tính ATX (PSU)'}`
+    `- **Phân loại:** ${DEVICE_CATEGORY_META[board.category].label}`
   );
   lines.push(`- **Thế hệ / Kiến trúc:** ${board.generation}`);
   lines.push(`- **Form Factor:** ${board.formFactor}`);
