@@ -353,7 +353,11 @@ export const SchematicViewer: React.FC<ModuleSharedProps> = ({
                 className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
               >
                 <ImageIcon className="h-3.5 w-3.5" />
-                <span>Xem Trên Ảnh Thực Tế PCB</span>
+                <span>
+                  {selectedBoard.realPhoto
+                    ? 'Xem Trên Ảnh Thực Tế PCB'
+                    : 'Mở Bố Trí Khối 2D & Tải Ảnh'}
+                </span>
               </button>
             )}
             <button

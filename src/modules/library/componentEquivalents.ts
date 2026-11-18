@@ -92,6 +92,41 @@ export const COMPONENT_EQUIVALENTS_DB: EquivalentEntry[] = [
     solderingTip:
       'Bôi keo tản nhiệt vào lưng cầu diode khi bắt lại vào tản nhôm. Đo kiểm 4 diode bên trong (chân ~ AC và + / -) không được thông 2 chiều.',
   },
+  {
+    keywords: ['kia7032', 'kia7042', 'az7033', 'mcp100', 'reset'],
+    kind: 'ic',
+    equivalents: ['KIA7032AP (ngưỡng 3.2V TO-92)', 'KIA7042AP (ngưỡng 4.2V)', 'AZ7033 / KA75330 (kiểm tra thứ tự chân!)'],
+    solderingTip:
+      'Linh kiện hay hỏng nhất trên máy lọc khí Coway AP-1512HH! Lưu ý sơ đồ chân TO-92 có bản OUT-VCC-GND hoặc VCC-GND-OUT tùy hãng sản xuất — bắt buộc soi mạch in +5V và GND trước khi hàn.',
+  },
+  {
+    keywords: ['bta16', 'bta08', 'bta12', 'bt136', 'moc3063', 'triac'],
+    kind: 'mosfet',
+    equivalents: ['BTA16-600B / BTA16-800B (Lưng cách điện)', 'BTA12-600C / BTA08-600C', 'Opto kích MOC3063 (Zero-Cross) / MOC3041'],
+    solderingTip:
+      'CẢNH BÁO AN TOÀN NHÀ TẮM: Trên nắp Bidet và thiết bị có nước bắt buộc dùng dòng BTAxx (lưng gốm CÁCH ĐIỆN hoàn toàn với MT2). CẤM thay sang BTBxx nối thẳng MT2 ra vỏ tản nhiệt!',
+  },
+  {
+    keywords: ['uln2003', 'uln2803', 'kid65003', 'darlington'],
+    kind: 'ic',
+    equivalents: ['ULN2003AN / ULN2003ADR (16 chân)', 'KID65003AP / TD62003AP', 'ULN2004 (lệnh CMOS 5V-12V)'],
+    solderingTip:
+      'IC đệm lái Relay 12V, van từ RO 24V và motor bước vòi rửa Bidet. Luôn đo cuộn tải ngoài xem có chập không trước khi thay ULN2003 mới kẻo nổ tiếp kênh mới.',
+  },
+  {
+    keywords: ['ntc', 'thermistor', '10kω', 'cn_ntc'],
+    kind: 'connector',
+    equivalents: ['Đầu dò NTC 10kΩ @ 25°C (B=3435K / 3950K) vỏ inox chống thấm', 'Cảm biến nhiệt bầu lạnh / bầu nóng chuẩn Coway CHP'],
+    solderingTip:
+      'Test cảm biến NTC chuẩn bằng 2 điểm nhiệt độ: ~10kΩ ở 25°C và ~28–33kΩ trong ly nước đá 0°C. Nếu bọc nhựa/inox bị nứt ngấm ẩm sẽ gây đóng băng bầu lạnh.',
+  },
+  {
+    keywords: ['znr', '14d471', '14d271', 'tvr14', 'mov'],
+    kind: 'resistor',
+    equivalents: ['14D471K / TVR14471 (cho lưới 220VAC)', '14D271K / TVR14271 (cho bản Mỹ/Nhật 110V–120VAC)'],
+    solderingTip:
+      'Varistor ZNR đấu song song sau cầu chì AC để tự ngắn mạch nổ cầu chì khi quá áp. Với máy Coway 110V cắm nhầm 220V, phải thay đúng 14D271K hoặc dùng qua đổi nguồn 110V.',
+  },
 ];
 
 export function findEquivalentsForComponent(

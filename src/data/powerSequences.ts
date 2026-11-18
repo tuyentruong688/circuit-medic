@@ -656,5 +656,221 @@ export const POWER_SEQUENCES: PowerSequenceSpec[] = [
         failureSymptom: 'Đèn xanh ACT nháy 4 lần lặp lại (lỗi SDRAM/Bootloader) hoặc nháy đều không xuất hình HDMI.'
       }
     ]
+  },
+
+  // =========================================================================
+  // 9. COWAY AIR PURIFIER (AP-1512HH / AP-1008CH / AP-1009CH) POWER SEQUENCE
+  // =========================================================================
+  {
+    id: 'seq-coway-air-purifier',
+    title: 'Chuỗi Khởi Động & Điều Tốc BLDC Máy Lọc Không Khí Coway (AP-1512HH / AP-1008CH)',
+    category: 'appliance',
+    platform: 'Coway Air Purifier (AC 220V/120V -> 310VDC Bus + SMPS 15V/5V -> KIA7032AP Reset -> Reed Door SW -> BLDC VSP/FG)',
+    stages: [
+      {
+        order: 1,
+        signalName: 'AC_IN -> C_HV310 (310VDC Bus)',
+        source: 'Lưới điện 220VAC (hoặc 120VAC US) qua Cầu chì F_AC1 & ZNR1',
+        destination: 'Tụ lọc chính C_HV310, chân D của U_SMPS1 và Pin 1 (VM) giắc quạt CN_MOTOR',
+        voltage: '305V - 325VDC (165V US)',
+        delayMs: '0ms',
+        description: 'Chỉnh lưu cầu diode tạo điện áp cao DC Bus nạp trên tụ chính, nuôi đồng thời nguồn xung cấp trước và tầng công suất bên trong motor quạt BLDC.',
+        failureSymptom: 'Nổ cầu chì F_AC1, vỡ Varistor ZNR1 (nhất là máy 110V cắm nhầm 220V) hoặc mất điện hoàn toàn.'
+      },
+      {
+        order: 2,
+        signalName: 'SMPS +15V_DRV & +5V_MCU',
+        source: 'IC nguồn xung Flyback U_SMPS1 (TNY277 / STR-A6069) + Opto hồi tiếp U_OPTO1',
+        destination: 'Pin 4 quạt BLDC (+15V), IC Reset U_RST, MCU (+5V) & Cảm biến bụi CN_DUST',
+        voltage: '+15.0VDC & +5.00VDC',
+        delayMs: '10 - 35ms',
+        description: 'Nguồn xung thứ cấp tạo +15VDC ổn định nuôi IC driver trong motor quạt và +5VDC nuôi toàn bộ mặt phím điều khiển.',
+        failureSymptom: 'Mất hoàn toàn đèn báo hoặc nguồn chập chờn nháy liên tục kiểu hiccup do tụ lọc 15V/5V bị khô/phù.'
+      },
+      {
+        order: 3,
+        signalName: 'RESET_MCU (KIA7032AP Release)',
+        source: 'IC giám sát điện áp Reset U_RST (KIA7032AP / KIA7042AP TO-92)',
+        destination: 'Chân RESET của vi điều khiển U_MCU_AIR',
+        voltage: '0V -> +5.0V (Active LOW)',
+        delayMs: '50 - 150ms',
+        description: 'Khi nguồn +5V_MCU vượt ngưỡng 3.2V–4.2V ổn định, KIA7032AP nhả chân OUT từ 0V lên 5V cho phép MCU bắt đầu chạy chương trình.',
+        failureSymptom: 'PAN KINH ĐIỂN: Có đủ +5V tại VCC nhưng chân OUT của KIA7032AP bị rò ghim < 1V -> Mặt điều khiển tối đen hoàn toàn không lên đèn.'
+      },
+      {
+        order: 4,
+        signalName: 'DOOR_SW_SIG (Nắp Trước Đóng Kín)',
+        source: 'Công tắc từ Reed Switch SW_DOOR + Nam châm mặt nạ trước',
+        destination: 'Chân GPIO bảo vệ khóa nắp của U_MCU_AIR',
+        voltage: '0.0V (Đóng kín) / +5.0V (Hở nắp)',
+        delayMs: 'Kiểm tra liên tục',
+        description: 'MCU xác nhận mặt nạ trước đã đóng đúng khớp qua tiếp điểm từ SW_DOOR trước khi cho phép xuất áp điều tốc quạt.',
+        failureSymptom: 'Có đèn nguồn nhưng bấm tăng tốc quạt đứng im hoặc nháy đèn báo do rơi mất nam châm nắp hoặc hỏng Reed Switch SW_DOOR.'
+      },
+      {
+        order: 5,
+        signalName: 'DUST_OUT_ADC (Đọc Cảm Biến Bụi)',
+        source: 'Cụm cảm biến bụi quang hồng ngoại CN_DUST',
+        destination: 'Chân ADC MCU & Vòng LED AQI',
+        voltage: '0.5V (Sạch) - 3.6V (Ô nhiễm)',
+        delayMs: '200 - 1000ms',
+        description: 'MCU làm nóng nhẹ khí buồng quang, đọc điện áp phản xạ bụi để đổi màu vòng đèn AQI (Xanh/Tím/Đỏ) và tính tốc độ Auto.',
+        failureSymptom: 'Bẩn thấu kính quang khiến DUST_OUT_ADC kẹt >2.5V làm đèn AQI đỏ rực suốt ngày và quạt Auto hú hết công suất.'
+      },
+      {
+        order: 6,
+        signalName: 'BLDC VSP Speed Command',
+        source: 'Ngõ ra PWM lọc DC từ U_MCU_AIR qua bo công suất',
+        destination: 'Pin 5 (VSP) giắc quạt CN_MOTOR',
+        voltage: '1.8V - 5.5VDC theo cấp 1-2-3',
+        delayMs: '50ms sau lệnh bật quạt',
+        description: 'Khi bấm Power/Speed, MCU đẩy điện áp điều khiển tốc độ VSP tới IC công suất bên trong motor quạt BLDC.',
+        failureSymptom: 'Quạt đứng im dù có đủ 310V và +15V do mất tín hiệu VSP tại Pin 5 giắc CN_MOTOR.'
+      },
+      {
+        order: 7,
+        signalName: 'BLDC FG Hall Tachometer Lock',
+        source: 'Cảm biến Hall bên trong motor quạt BLDC',
+        destination: 'Pin 6 (FG) -> MCU giám sát vòng quay thực tế',
+        voltage: 'Xung vuông 0-5V (~2.5VDC)',
+        delayMs: '500 - 2000ms sau lệnh VSP',
+        description: 'Động cơ quay đều và trả xung vuông FG về MCU xác nhận vòng quay hợp lệ; nếu mất xung FG sau 2 giây MCU sẽ ngắt bảo vệ.',
+        failureSymptom: 'Quạt chỉ quay nhích 1-2 giây rồi tắt và toàn bộ LED tốc độ nhấp nháy báo lỗi (đứt dây FG, kẹt bạc đạn hoặc hỏng IC trong quạt).'
+      }
+    ]
+  },
+
+  // =========================================================================
+  // 10. COWAY WATER PURIFIER (CHP-264L / CHP-18AR) CONTROL SEQUENCE
+  // =========================================================================
+  {
+    id: 'seq-coway-water-chp',
+    title: 'Trình Tự Cấp Nguồn, Lọc RO & Đóng Tải Nóng/Lạnh Coway (CHP-264L / CHP-18AR)',
+    category: 'appliance',
+    platform: 'Coway RO Water Purifier (SMPS +24V/+12V/+5V -> NTC Self-Check -> Float/Leak -> RO Pump -> Heater & Comp Relays)',
+    stages: [
+      {
+        order: 1,
+        signalName: 'AC 220V -> SMPS (+24V / +12V / +5V)',
+        source: 'Cầu chì F_CHP1 -> IC nguồn xung U_SMPS_CHP',
+        destination: 'Tụ C_24V_OUT (+24V RO), cuộn Relay (+12V) & Micom (+5V)',
+        voltage: '+24V / +12V / +5.0V',
+        delayMs: '0 - 30ms',
+        description: 'Khối nguồn xung đa ngõ ra khởi tạo đồng thời nguồn công suất 24V cho bơm/van, 12V cho Relay và 5V cho Micom.',
+        failureSymptom: 'Mất nguồn tối hết đèn do nổ U_SMPS_CHP; hoặc phù tụ C_24V_OUT gây sụt áp nháy đèn mỗi khi đóng bơm.'
+      },
+      {
+        order: 2,
+        signalName: 'NTC_HOT & NTC_COLD Self-Check',
+        source: 'Đầu dò nhiệt NTC 10kΩ (CN_NTC_HOT & CN_NTC_COLD)',
+        destination: 'Kênh ADC giám sát nhiệt độ của Micom',
+        voltage: '0.5V - 4.2VDC hợp lệ',
+        delayMs: '50 - 200ms',
+        description: 'Micom kiểm tra hai đầu dò NTC không bị hở mạch (0V/5V) hay chập mạch trước khi cho phép bật chế độ Nóng hoặc Lạnh.',
+        failureSymptom: 'Đứt hoặc chập đầu dò NTC gây nháy đèn Hot/Cold báo lỗi; sai trị số NTC lạnh dẫn đến ĐÓNG ĐÁ kín bầu lạnh.'
+      },
+      {
+        order: 3,
+        signalName: 'LEAK_SW & TANK_FLOAT Check',
+        source: 'Cảm biến tràn đáy máy & Phao từ mức nước CN_WATER_LVL',
+        destination: 'Micom Interrupt & Điều khiển Van cấp',
+        voltage: '+5V (Khô) / 0-5V Phao',
+        delayMs: '100 - 300ms',
+        description: 'Kiểm tra khay đáy không bị rò nước và đọc mực nước bình chứa RO để quyết định kích lọc bổ sung hay ngắt đầy.',
+        failureSymptom: 'Rỉ nước khay đáy gây khóa van báo bíp liên tục; kẹt phao làm bơm lọc chạy mãi tràn bình hoặc không chịu lọc.'
+      },
+      {
+        order: 4,
+        signalName: 'ULN2003 -> +24V RO Pump & Feed Valve',
+        source: 'Micom qua IC đệm Darlington U_DRV_ULN (ULN2003A)',
+        destination: 'Giắc bơm tăng áp RO & Van điện từ cấp/sục CN_PUMP_VALVE',
+        voltage: '+24.0VDC',
+        delayMs: '500ms khi bình thiếu nước',
+        description: 'Mở van điện từ cấp nước vào lõi RO và chạy bơm tăng áp 24VDC cho đến khi phao từ mức cao báo đầy.',
+        failureSymptom: 'Không bơm lọc nước dù đèn sáng do phù tụ C_24V_OUT, chết ULN2003A hoặc hỏng cuộn van từ.'
+      },
+      {
+        order: 5,
+        signalName: 'RLY_HEATER + Bimetal (Bầu Nóng)',
+        source: 'Lệnh Micom -> U_DRV_ULN đóng 12V cho cuộn hút RLY_HEATER',
+        destination: 'Thanh nhiệt bầu nóng (nối tiếp rơ-le nhiệt Bimetal)',
+        voltage: '12VDC Coil -> 220VAC Load',
+        delayMs: 'Sau khi bình đủ nước & công tắc Hot ON',
+        description: 'Đóng tiếp điểm RLY_HEATER đun nước tới ~88–92°C theo phản hồi từ CN_NTC_HOT rồi tự ngắt.',
+        failureSymptom: 'Vòi nóng vẫn lạnh dù đèn sáng do nhảy rơ-le Bimetal chống cạn trên bầu nóng hoặc cháy tiếp điểm RLY_HEATER.'
+      },
+      {
+        order: 6,
+        signalName: 'Compressor Delay (3-5 phút) & RLY_COMP',
+        source: 'Bộ đếm trễ bảo vệ Block trong Micom -> RLY_COMP',
+        destination: 'Rơ-le khởi động PTC & Block máy nén làm lạnh',
+        voltage: '12VDC Coil -> 220VAC Load',
+        delayMs: '180000 - 300000ms (3-5 phút)',
+        description: 'Trễ 3–5 phút để cân bằng áp suất gas trước khi đóng Block máy nén; chạy tới 4°C thì ngắt Block.',
+        failureSymptom: 'Dính tiếp điểm RLY_COMP hoặc trôi NTC lạnh làm Block chạy không nghỉ, đóng cục đá kín bầu lạnh!'
+      }
+    ]
+  },
+
+  // =========================================================================
+  // 11. COWAY BIDET (BA-07 / BA-13 / BAS22-A) TRIAC & ACTUATOR SEQUENCE
+  // =========================================================================
+  {
+    id: 'seq-coway-bidet',
+    title: 'Trình Tự An Toàn Zero-Cross, Seat Sensor & Triac Nắp Bidet Coway (BA / BAS Series)',
+    category: 'appliance',
+    platform: 'Coway Electronic Bidet (ELCB -> SMPS 12V/5V -> Zero-Cross 100Hz -> Nozzle Home -> Seat Occupancy -> Triac Heater)',
+    stages: [
+      {
+        order: 1,
+        signalName: 'ELCB & SMPS (+12V / +5V)',
+        source: 'Phích cắm chống giật ELCB -> Cầu chì F_BIDET1 -> Mạch nguồn',
+        destination: 'U_STEP_DRV (+12V), MCU & Cảm biến (+5V)',
+        voltage: '+12.0V & +5.0V DC',
+        delayMs: '0 - 30ms',
+        description: 'Khởi tạo nguồn nuôi logic 5V và nguồn motor/van 12V trong môi trường chống ẩm potting.',
+        failureSymptom: 'Nhảy ELCB ngay khi cắm (rò điện bầu đun/sưởi bệ) hoặc mất nguồn hoàn toàn.'
+      },
+      {
+        order: 2,
+        signalName: 'ZC_SYNC_PULSE (100Hz Zero-Cross)',
+        source: 'Opto hai chiều U_ZC_OPTO (PC814) lấy mẫu sin 220VAC qua trở hạn dòng',
+        destination: 'Chân ngắt ngoài MCU (External Interrupt)',
+        voltage: 'Xung 100Hz biên độ 5V',
+        delayMs: '10ms / bán chu kỳ',
+        description: 'Cung cấp mốc thời gian 0V của điện lưới AC để MCU điều khiển góc kích Triac BTA16 và BTA08 chính xác.',
+        failureSymptom: 'Mất xung Zero-Cross -> MCU khóa an toàn không đun nước lẫn không sưởi ấm bệ ngồi.'
+      },
+      {
+        order: 3,
+        signalName: 'Nozzle Stepper Self-Homing (12V)',
+        source: 'ULN2003ADR (U_STEP_DRV)',
+        destination: 'Motor bước 5 dây cụm vòi rửa CN_NOZZLE_VALVE',
+        voltage: '+12VDC 4-Phase Step',
+        delayMs: '300 - 1500ms khi cấp điện',
+        description: 'Khi mới cắm điện, MCU kéo vòi rửa thụt về vị trí gốc (Home) và tráng nhẹ vòi.',
+        failureSymptom: 'Kẹt khựng cơ khí hoặc đứt mạch ăn mòn chân U_STEP_DRV làm vòi không thu vào hết.'
+      },
+      {
+        order: 4,
+        signalName: 'SEAT_OCCUPIED (Xác Nhận Ngồi)',
+        source: 'Cảm biến ngồi CN_SEAT_KEY (qua dây bản lề bệ)',
+        destination: 'Chân an toàn cho phép phun rửa của MCU',
+        voltage: '+5.0V -> 0.0V khi ngồi',
+        delayMs: 'Ngay khi có người ngồi',
+        description: 'Ngăn phun nước ra ngoài phòng tắm khi nhấn nhầm nút lúc không có người ngồi lên nắp bệ.',
+        failureSymptom: 'Đứt ngầm dây cảm biến ngồi ở trục bản lề khiến bấm Wash/Bidet vòi không phản hồi.'
+      },
+      {
+        order: 5,
+        signalName: 'Water Valve + Triac Heater (BTA16)',
+        source: 'Opto-Triac MOC3063 & Triac lưng cách điện Q_TRIAC_WTR (BTA16-600B)',
+        destination: 'Thanh đốt bầu nước nóng & van điện từ 12V',
+        voltage: '0 - 220Vrms theo NTC nước',
+        delayMs: 'Liên tục theo nhiệt độ đặt',
+        description: 'Mở van nước và điều khiển pha Triac giữ nhiệt độ nước rửa ổn định ở mức 34°C–40°C theo cảm biến CN_WTR_NTC.',
+        failureSymptom: 'Chập Triac MT1-MT2 làm nước nóng sôi bỏng gây nhảy cầu chì nhiệt; chết Opto kích/Triac làm nước lạnh buốt.'
+      }
+    ]
   }
 ];

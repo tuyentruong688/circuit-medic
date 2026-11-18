@@ -681,16 +681,18 @@ export const Board3DViewer: React.FC<ModuleSharedProps> = ({
             'Chưa có file CAD / BoardView 3D chính thức cho bo mạch này. Ứng dụng để trống phần dựng hình 3D để không mô phỏng sai cấu trúc vật lý.'}
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
-          {selectedBoard.realPhoto && (
-            <button
-              type="button"
-              onClick={() => onNavigateMode('boardview')}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
-            >
-              <ImageIcon className="h-3.5 w-3.5" />
-              <span>Mở Ảnh Thực Tế PCB</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => onNavigateMode('boardview')}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
+          >
+            <ImageIcon className="h-3.5 w-3.5" />
+            <span>
+              {selectedBoard.realPhoto
+                ? 'Mở Ảnh Thực Tế PCB'
+                : 'Mở Bố Trí Khối 2D & Tải Ảnh'}
+            </span>
+          </button>
           <button
             type="button"
             onClick={() => onNavigateMode('diagnostics')}

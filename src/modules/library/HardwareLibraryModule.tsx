@@ -46,6 +46,7 @@ type LibraryTab = 'catalog' | 'power_sequence' | 'cross_reference';
 
 const GENERATION_CHIPS = [
   { id: 'all', label: 'Tất cả đời mạch' },
+  { id: 'Coway', label: 'Coway (BLDC / RO / Bidet)' },
   { id: 'AVR', label: 'Arduino AVR' },
   { id: 'RP2040', label: 'Pico RP2040' },
   { id: 'BCM2711', label: 'Raspberry Pi 4' },
@@ -371,6 +372,7 @@ export const HardwareLibraryModule: React.FC<ModuleSharedProps> = ({
               <div className="md:col-span-4 flex flex-wrap gap-1.5">
                 {[
                   { id: 'all', label: 'Tất cả' },
+                  { id: 'appliance', label: DEVICE_CATEGORY_META.appliance.shortLabel },
                   { id: 'sbc_mcu', label: DEVICE_CATEGORY_META.sbc_mcu.shortLabel },
                   { id: 'gpu', label: DEVICE_CATEGORY_META.gpu.shortLabel },
                   { id: 'motherboard', label: DEVICE_CATEGORY_META.motherboard.shortLabel },
@@ -975,6 +977,7 @@ export const HardwareLibraryModule: React.FC<ModuleSharedProps> = ({
                   className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
                 >
                   <option value="all">Tất cả phân loại bo mạch</option>
+                  <option value="appliance">Chỉ Gia Dụng Coway (Lọc khí / Lọc nước / Bidet)</option>
                   <option value="sbc_mcu">Chỉ Nhúng & SBC (Arduino / RPi)</option>
                   <option value="gpu">Chỉ Card Đồ Họa VGA / GPU</option>
                   <option value="motherboard">Chỉ Mainboard PC</option>

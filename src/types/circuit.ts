@@ -1,4 +1,4 @@
-export type DeviceCategory = 'motherboard' | 'psu' | 'gpu' | 'sbc_mcu';
+export type DeviceCategory = 'motherboard' | 'psu' | 'gpu' | 'sbc_mcu' | 'appliance';
 export type ViewMode = 'dashboard' | 'scanner' | 'schematic' | 'viewer3d' | 'boardview' | 'workbench' | 'diagnostics' | 'library';
 export type UiTheme = 'slate' | 'light';
 
@@ -128,7 +128,13 @@ export interface DiagnosticStep {
 
 export interface FaultCase {
   id: string;
-  boardId: string | 'all_motherboards' | 'all_psu' | 'all_gpu' | 'all_sbc_mcu';
+  boardId:
+    | string
+    | 'all_motherboards'
+    | 'all_psu'
+    | 'all_gpu'
+    | 'all_sbc_mcu'
+    | 'all_appliances';
   category: DeviceCategory;
   brandTag: string;
   title: string;

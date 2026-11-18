@@ -449,11 +449,12 @@ export async function runLocalVisionScan(params: {
   const { histogram, clusters } = await extractImageFeatures(imageUrl);
   const hint = hintText.toLowerCase();
 
-  // Heuristic category classification across all 4 hardware categories
+  // Heuristic category classification across all 5 hardware categories
   let psuScore = 0;
   let mbScore = 0;
   let gpuScore = 0;
   let sbcScore = 0;
+  let applianceScore = 0;
 
   if (histogram.yellowTransformerRatio > 0.012) psuScore += 42;
   if (histogram.brownRatio > 0.08) psuScore += 28;
@@ -473,6 +474,9 @@ export async function runLocalVisionScan(params: {
   if (/(arduino|uno|pico|rp2040|raspberry|bcm2711|mxl7704|atmega|ncp1117|gpio)/i.test(hint)) {
     sbcScore += 55;
   }
+  if (/(coway|ap-1512|ap-1008|ap-1009|chp-|villaem|neo plus|bidet|ba-13|bas22|kia7032|lọc không khí|lọc nước|bầu nóng|bầu lạnh|cảm biến bụi|vòi rửa)/i.test(hint)) {
+    applianceScore += 65;
+  }
 
   if (targetBoardOverrideId) {
     const target = boards.find((b) => b.id === targetBoardOverrideId);
@@ -480,6 +484,7 @@ export async function runLocalVisionScan(params: {
     if (target?.category === 'motherboard') mbScore += 75;
     if (target?.category === 'gpu') gpuScore += 75;
     if (target?.category === 'sbc_mcu') sbcScore += 75;
+    if (target?.category === 'appliance') applianceScore += 75;
   }
 
   const catScores: Array<{ cat: DeviceCategory; score: number }> = [
@@ -487,6 +492,7 @@ export async function runLocalVisionScan(params: {
     { cat: 'psu', score: psuScore },
     { cat: 'gpu', score: gpuScore },
     { cat: 'sbc_mcu', score: sbcScore },
+    { cat: 'appliance', score: applianceScore },
   ];
   catScores.sort((a, b) => b.score - a.score);
   const detectedCategory: DeviceCategory = catScores[0].cat;
@@ -575,7 +581,10 @@ export async function runLocalVisionScan(params: {
   const safetyWarning =
     detectedCategory === 'psu'
       ? 'CẢNH BÁO CAO ÁP 320V–390V DC: Tụ lọc chính sơ cấp vẫn tích điện nguy hiểm ngay cả khi đã rút phích cắm! Luôn xả tụ qua bóng đèn sợi đốt 60W–100W trước khi chạm mạch.'
-      : primaryBoard.safetyWarning;
+      : detectedCategory === 'appliance'
+        ? primaryBoard.safetyWarning ||
+          'CẢNH BÁO 220VAC / 310VDC & MÔI TRƯỜNG NƯỚC (COWAY): Rút điện, xả tụ lọc chính và khóa van nước/lau khô mạch trước khi đo!'
+        : primaryBoard.safetyWarning;
 
   const visibleComponents = primaryBoard.components.slice(0, 6).map((c) => `${c.id} (${c.label})`);
   const recommendedTestPoints = primaryBoard.rails.slice(0, 5).map((r) => `${r.name}: chuẩn ${r.nominalVoltage}`);
@@ -630,10 +639,10 @@ export async function runGeminiVisionScan(params: {
     const { histogram, base64Jpeg } = await extractImageFeatures(imageUrl);
 
     const promptText = [
-      'Bạn là kỹ sư chuyên sửa chữa Mainboard PC, Nguồn ATX (PSU), Card VGA và bo nhúng SBC.',
+      'Bạn là kỹ sư chuyên sửa chữa Mainboard PC, Nguồn ATX (PSU), Card VGA, bo nhúng SBC và thiết bị gia dụng Coway (Lọc khí / Lọc nước / Bidet).',
       'Hãy phân tích ảnh bảng mạch điện tử đính kèm và trả về DUY NHẤT JSON hợp lệ theo schema sau (bằng tiếng Việt):',
       '{',
-      '  "boardCategory": "motherboard" | "psu" | "gpu" | "sbc_mcu",',
+      '  "boardCategory": "motherboard" | "psu" | "gpu" | "sbc_mcu" | "appliance",',
       '  "brandGuess": "tên hãng đoán được (vd ASUS, Gigabyte, MSI, ASRock, Corsair, Seasonic, Cooler Master, Generic)",',
       '  "modelGuess": "tên dòng mạch hoặc topology (vd LGA1700 B760, AM4 B550, LLC+DC-DC, TL494)",',
       '  "confidence": 85,',
@@ -692,7 +701,7 @@ export async function runGeminiVisionScan(params: {
       .trim();
 
     const parsed = JSON.parse(cleanedJson) as GeminiVisionJsonResponse;
-    const validCategories: DeviceCategory[] = ['motherboard', 'psu', 'gpu', 'sbc_mcu'];
+    const validCategories: DeviceCategory[] = ['motherboard', 'psu', 'gpu', 'sbc_mcu', 'appliance'];
     const category: DeviceCategory =
       parsed.boardCategory && validCategories.includes(parsed.boardCategory)
         ? parsed.boardCategory

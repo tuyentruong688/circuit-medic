@@ -49,6 +49,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<DeviceCategory | 'all'>('all');
 
   const sbcBoards = boards.filter((b) => b.category === 'sbc_mcu');
+  const applianceBoards = boards.filter((b) => b.category === 'appliance');
   const gpuBoards = boards.filter((b) => b.category === 'gpu');
   const motherboards = boards.filter((b) => b.category === 'motherboard');
   const psus = boards.filter((b) => b.category === 'psu');
@@ -132,7 +133,8 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
       fault.boardId === 'all_motherboards' ||
       fault.boardId === 'all_psu' ||
       fault.boardId === 'all_gpu' ||
-      fault.boardId === 'all_sbc_mcu';
+      fault.boardId === 'all_sbc_mcu' ||
+      fault.boardId === 'all_appliances';
     if (!isWildcard) {
       onSelectBoard(fault.boardId);
     } else {
@@ -165,7 +167,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
               Trạm Chẩn Đoán & Sửa Chữa{' '}
               <span className="bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 bg-clip-text text-transparent">
-                Bo Mạch Điện Tử, Mainboard, VGA & PSU
+                Bo Mạch Điện Tử, Mainboard, VGA, PSU & Gia Dụng Coway
               </span>
             </h1>
 
@@ -210,7 +212,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
               <div className="text-[11px] text-slate-400">Bo Mạch Hệ Thống</div>
               <div className="mt-1 font-mono text-2xl font-bold text-cyan-300">{boards.length}</div>
               <div className="text-[10px] text-slate-400">
-                {sbcBoards.length} SBC • {gpuBoards.length} VGA • {motherboards.length} Main • {psus.length} PSU
+                {sbcBoards.length} SBC • {applianceBoards.length} Coway • {gpuBoards.length} VGA • {motherboards.length} Main • {psus.length} PSU
               </div>
             </div>
             <div className="rounded-xl border border-slate-700/80 bg-slate-900/70 p-3.5">
@@ -284,6 +286,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                 [
                   { id: 'all', label: `Tất cả (${boards.length})` },
                   { id: 'sbc_mcu', label: `Nhúng / SBC (${sbcBoards.length})` },
+                  { id: 'appliance', label: `Gia Dụng Coway (${applianceBoards.length})` },
                   { id: 'gpu', label: `Card VGA (${gpuBoards.length})` },
                   { id: 'motherboard', label: `Mainboard (${motherboards.length})` },
                   { id: 'psu', label: `Nguồn ATX (${psus.length})` },

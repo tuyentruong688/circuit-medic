@@ -31,6 +31,11 @@ export const DEVICE_CATEGORY_META: Record<
     shortLabel: 'Nhúng / SBC',
     badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
   },
+  appliance: {
+    label: 'Thiết Bị Gia Dụng Coway (Lọc Khí / Nước / Bidet)',
+    shortLabel: 'Gia Dụng Coway',
+    badgeClass: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
+  },
 };
 
 export const SCHEMATIC_STATUS_META: Record<
@@ -180,7 +185,7 @@ export const VIEW_MODE_META: Record<
   library: {
     label: 'Thư Viện & Chuỗi Nguồn',
     shortLabel: 'Thư Viện',
-    description: 'Tra cứu linh kiện, datasheet chân đo và chuỗi kích nguồn Intel/AMD/PSU/SBC',
+    description: 'Tra cứu linh kiện, datasheet chân đo và chuỗi kích nguồn Intel/AMD/PSU/SBC/Coway',
     shortcut: '8',
   },
 };

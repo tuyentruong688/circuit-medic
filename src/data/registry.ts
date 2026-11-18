@@ -1,6 +1,8 @@
+import { COWAY_BOARDS } from './boards/cowayBoards';
 import { DESKTOP_MOTHERBOARDS } from './boards/desktopMotherboards';
 import { EMBEDDED_AND_GPU_BOARDS } from './boards/embeddedAndGpuBoards';
 import { PSU_BOARDS } from './boards/psuBoards';
+import { COWAY_FAULTS } from './faults/cowayFaults';
 import { EMBEDDED_AND_GPU_FAULTS } from './faults/embeddedAndGpuFaults';
 import { MOTHERBOARD_FAULTS } from './faults/motherboardFaults';
 import { PSU_FAULTS } from './faults/psuFaults';
@@ -9,11 +11,13 @@ import { FaultCase, HardwareBoard, PowerSequenceSpec } from '../types/circuit';
 
 export const ALL_BOARDS: HardwareBoard[] = [
   ...EMBEDDED_AND_GPU_BOARDS,
+  ...COWAY_BOARDS,
   ...DESKTOP_MOTHERBOARDS,
   ...PSU_BOARDS,
 ];
 
 export const ALL_FAULTS: FaultCase[] = [
+  ...COWAY_FAULTS,
   ...EMBEDDED_AND_GPU_FAULTS,
   ...MOTHERBOARD_FAULTS,
   ...PSU_FAULTS,
@@ -31,7 +35,8 @@ export function isFaultForBoard(fault: FaultCase, board: HardwareBoard): boolean
     (board.category === 'motherboard' && fault.boardId === 'all_motherboards') ||
     (board.category === 'psu' && fault.boardId === 'all_psu') ||
     (board.category === 'gpu' && fault.boardId === 'all_gpu') ||
-    (board.category === 'sbc_mcu' && fault.boardId === 'all_sbc_mcu')
+    (board.category === 'sbc_mcu' && fault.boardId === 'all_sbc_mcu') ||
+    (board.category === 'appliance' && fault.boardId === 'all_appliances')
   );
 }
 

@@ -122,6 +122,11 @@ export const MultimeterBar: React.FC<MultimeterBarProps> = ({
               <AlertOctagon className="h-3 w-3 text-amber-400" />
               NVVDD rất thấp (0.2–0.6Ω): Phân biệt kỹ bằng thang 0.1Ω
             </span>
+          ) : selectedBoard.category === 'appliance' ? (
+            <span className="inline-flex items-center gap-1 rounded border border-rose-500/35 bg-rose-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-300">
+              <AlertOctagon className="h-3 w-3 text-rose-400" />
+              220VAC / 310VDC & Ẩm Nước — Rút điện, xả tụ & lau khô trước khi đo
+            </span>
           ) : (
             <span className="inline-flex items-center gap-1 rounded border border-slate-800 bg-slate-900/80 px-2 py-0.5 font-mono text-[10px] text-slate-400">
               <Zap className="h-3 w-3 text-emerald-400" />

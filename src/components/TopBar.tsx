@@ -39,7 +39,9 @@ function formatBoardOptionLabel(prefix: string, board: HardwareBoard): string {
       : schStatus === 'official_partial'
         ? ' · Schematic Rút gọn'
         : schStatus === 'unavailable'
-          ? ' · Chỉ Ảnh PCB (NDA)'
+          ? board.realPhoto
+            ? ' · Chỉ Ảnh PCB (NDA)'
+            : ' · Pan & Khối 2D (NDA)'
           : '';
   return `${photoTag}[${prefix}] ${board.name}${schTag}`;
 }
@@ -61,6 +63,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onToggleUiTheme,
 }) => {
   const sbcList = boards.filter((b) => b.category === 'sbc_mcu');
+  const applianceList = boards.filter((b) => b.category === 'appliance');
   const gpuList = boards.filter((b) => b.category === 'gpu');
   const motherboardList = boards.filter((b) => b.category === 'motherboard');
   const psuList = boards.filter((b) => b.category === 'psu');
@@ -101,6 +104,15 @@ export const TopBar: React.FC<TopBarProps> = ({
                   {sbcList.map((b) => (
                     <option key={b.id} value={b.id}>
                       {formatBoardOptionLabel('SBC', b)}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {applianceList.length > 0 && (
+                <optgroup label="Thiết Bị Gia Dụng Coway (Lọc Khí / Lọc Nước / Bidet)">
+                  {applianceList.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {formatBoardOptionLabel('Coway', b)}
                     </option>
                   ))}
                 </optgroup>

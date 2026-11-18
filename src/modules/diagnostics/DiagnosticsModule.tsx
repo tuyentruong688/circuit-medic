@@ -42,6 +42,7 @@ import { POST_CODE_ITEMS, type PostCodeItem } from './postCodeData';
 
 const BRAND_FILTERS = [
   { id: 'all', label: 'Tất cả hãng' },
+  { id: 'Coway', label: 'Coway (Lọc khí / Nước / Bidet)' },
   { id: 'Arduino', label: 'Arduino' },
   { id: 'Raspberry Pi', label: 'Raspberry Pi' },
   { id: 'NVIDIA', label: 'NVIDIA' },
@@ -60,7 +61,7 @@ const SEVERITY_META: Record<
   { label: string; badgeClass: string; borderClass: string }
 > = {
   critical_hv: {
-    label: 'NGUY HIỂM CAO ÁP 390VDC',
+    label: 'NGUY HIỂM CAO ÁP 220VAC / 310-390VDC',
     badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-500/50',
     borderClass: 'border-rose-500/40',
   },
@@ -276,7 +277,8 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
       (fault.boardId === 'all_motherboards' ||
         fault.boardId === 'all_psu' ||
         fault.boardId === 'all_gpu' ||
-        fault.boardId === 'all_sbc_mcu')
+        fault.boardId === 'all_sbc_mcu' ||
+        fault.boardId === 'all_appliances')
     ) {
       const firstCatBoard = boards.find((b) => b.category === fault.category);
       if (firstCatBoard) onSelectBoard(firstCatBoard.id);
@@ -354,10 +356,10 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-semibold text-white tracking-wide">
-                Giải Mã Nhanh POST Code / EZ Debug LED & Tín Hiệu PSU
+                Giải Mã Nhanh POST Code / EZ Debug LED / PSU & Đèn Lỗi Coway
               </h2>
               <p className="text-[11px] text-slate-400">
-                Chọn mã lỗi trên card test main hoặc trạng thái PSU để khoanh vùng điểm đo và lọc pan-bệnh tương ứng
+                Chọn mã lỗi trên card test main, trạng thái PSU hoặc đèn chớp thiết bị Coway để khoanh vùng điểm đo và lọc pan-bệnh tương ứng
               </p>
             </div>
           </div>
@@ -376,6 +378,7 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
           {POST_CODE_ITEMS.map((item) => {
             const active = selectedPostCode?.code === item.code;
             const isPsu = item.category === 'psu';
+            const isAppliance = item.category === 'appliance';
             return (
               <button
                 key={item.code}
@@ -386,6 +389,8 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
                     ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.25)]'
                     : isPsu
                     ? 'bg-rose-950/35 border-rose-500/30 text-rose-300 hover:bg-rose-900/40'
+                    : isAppliance
+                    ? 'bg-teal-950/40 border-teal-500/35 text-teal-300 hover:bg-teal-900/45'
                     : 'bg-slate-950/70 border-slate-700/80 text-slate-300 hover:border-cyan-500/50 hover:text-cyan-200'
                 }`}
               >
@@ -494,6 +499,7 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
             <div className="flex flex-wrap gap-1.5">
               {[
                 { id: 'all', label: 'Tất cả' },
+                { id: 'appliance', label: DEVICE_CATEGORY_META.appliance.shortLabel },
                 { id: 'sbc_mcu', label: DEVICE_CATEGORY_META.sbc_mcu.shortLabel },
                 { id: 'gpu', label: DEVICE_CATEGORY_META.gpu.shortLabel },
                 { id: 'motherboard', label: DEVICE_CATEGORY_META.motherboard.shortLabel },
@@ -693,21 +699,37 @@ export const DiagnosticsModule: React.FC<ModuleSharedProps> = ({
                     <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5 animate-pulse" />
                     <div className="text-xs space-y-1">
                       <div className="font-bold text-rose-300 uppercase tracking-wide">
-                        Cảnh Báo An Toàn Điện Cao Áp Sơ Cấp (320V – 390V DC)
+                        {currentFault.category === 'appliance'
+                          ? 'Cảnh Báo An Toàn Điện Lưới 220VAC / 310VDC & Môi Trường Nước (Coway)'
+                          : 'Cảnh Báo An Toàn Điện Cao Áp Sơ Cấp (320V – 390V DC)'}
                       </div>
-                      <p className="text-rose-100/90 leading-relaxed">
-                        1) Luôn xả tụ lọc chính{' '}
-                        <code className="px-1 py-0.5 rounded bg-rose-900/60 font-mono">
-                          C_BULK1
-                        </code>{' '}
-                        qua bóng đèn sợi đốt hoặc điện trở công suất 2kΩ/5W trước khi đo nguội.
-                        <br />
-                        2) <strong>Mẹo thợ chuyên nghiệp:</strong> Khi nghi chạm cầu diode/MOSFET PFC sau khi thay linh kiện, hãy hàn nối tiếp{' '}
-                        <strong className="text-amber-300">
-                          bóng đèn sợi đốt 60W–100W thay cho cầu chì F1
-                        </strong>{' '}
-                        rồi mới cắm điện AC 220V! Nếu đèn sáng rực đứng yên tức còn chạm nặng (không nổ MOSFET mới).
-                      </p>
+                      {currentFault.category === 'appliance' ? (
+                        <p className="text-rose-100/90 leading-relaxed">
+                          1){' '}
+                          {targetBoardForFault.safetyWarning ||
+                            'Rút phích cắm AC, khóa van nước đầu vào (nếu là máy lọc nước/Bidet) và xả tụ lọc chính về <10VDC trước khi đo nguội hoặc rút giắc quạt BLDC.'}
+                          <br />
+                          2) <strong>Mẹo thợ chuyên nghiệp:</strong> Sau khi thay cầu chì/IC nguồn xung/MOV trên bo Coway, hãy đấu nối tiếp{' '}
+                          <strong className="text-amber-300">
+                            bóng đèn sợi đốt 60W
+                          </strong>{' '}
+                          vào dây AC test thử (với Bidet buộc cắm qua ELCB chống giật)!
+                        </p>
+                      ) : (
+                        <p className="text-rose-100/90 leading-relaxed">
+                          1) Luôn xả tụ lọc chính{' '}
+                          <code className="px-1 py-0.5 rounded bg-rose-900/60 font-mono">
+                            C_BULK1
+                          </code>{' '}
+                          qua bóng đèn sợi đốt hoặc điện trở công suất 2kΩ/5W trước khi đo nguội.
+                          <br />
+                          2) <strong>Mẹo thợ chuyên nghiệp:</strong> Khi nghi chạm cầu diode/MOSFET PFC sau khi thay linh kiện, hãy hàn nối tiếp{' '}
+                          <strong className="text-amber-300">
+                            bóng đèn sợi đốt 60W–100W thay cho cầu chì F1
+                          </strong>{' '}
+                          rồi mới cắm điện AC 220V! Nếu đèn sáng rực đứng yên tức còn chạm nặng (không nổ MOSFET mới).
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
