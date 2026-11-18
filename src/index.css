@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --lab-bg: #070b12;
+    --lab-surface: #0d1421;
+    --lab-panel: #111b2d;
+    --lab-border: rgba(56, 189, 248, 0.16);
+    --lab-cyan: #22d3ee;
+    --lab-emerald: #10b981;
+    --lab-amber: #f59e0b;
+    --lab-crimson: #f43f5e;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #070b12;
+    color: #e2e8f0;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+}
+
+/* Dark-lab PCB & Oscilloscope micro-grid background */
+.lab-grid-bg {
+  background-color: #070b12;
+  background-image:
+    radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.08), transparent 42%),
+    radial-gradient(circle at 85% 100%, rgba(16, 185, 129, 0.06), transparent 40%),
+    linear-gradient(to right, rgba(56, 189, 248, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+}
+
+.lab-panel {
+  background: linear-gradient(180deg, rgba(16, 25, 42, 0.94) 0%, rgba(10, 16, 28, 0.96) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.16);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.lab-glow-cyan {
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.18), inset 0 1px 0 rgba(34, 211, 238, 0.15);
+}
+
+.lab-glow-thermal {
+  box-shadow: 0 0 24px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(245, 158, 11, 0.2);
+}
+
+/* Custom sleek scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(7, 11, 18, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.22);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.4);
+}
